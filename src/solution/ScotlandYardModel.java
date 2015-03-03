@@ -3,26 +3,35 @@ package solution;
 import scotlandyard.*;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ScotlandYardModel extends ScotlandYard
 {
-    int numberOfDetectives;
+    Graph<Integer,Route> graph;
     List<Boolean> rounds;
     
-    Graph<Integer,Route> graph;
+    List<Colour> players;
+    MrX mrX;
+    Map<Colour,Detective> detectives;
+    
+    int currentPlayer;
     
     public ScotlandYardModel(int numberOfDetectives, List<Boolean> rounds, String graphFileName) throws IOException
     {
         super(numberOfDetectives, rounds, graphFileName);
         
-        this.numberOfDetectives = numberOfDetectives;
-        this.rounds = rounds;
-        
         GraphReader r = new ScotlandYardGraphReader();
         this.graph = r.readGraph(graphFileName);
+        this.rounds = new ArrayList<Boolean>(rounds);
+        
+        players = new ArrayList(numberOfDetectives + 1);
+        players.add(Colour.Black);
+        for (int i=0; i<numberOfDetectives; i++) players.add(null);
+        
+        mrX = null;
+        detectives = new HashMap<Colour,Detective>();
+        
+        currentPlayer = 0;
     }
     
     @Override
@@ -34,7 +43,8 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     protected void nextPlayer()
     {
-        
+        if (currentPlayer < players.size()) currentPlayer++;
+        else                                currentPlayer = 0;
     }
     
     @Override
