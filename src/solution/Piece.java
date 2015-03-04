@@ -27,12 +27,12 @@ public abstract class Piece
     {
         return colour;
     }
-
+    
 	public int getLocation() {
 		return location;
 	}
-
-	public Integer getNumTickets(Ticket ticket) {
-		return tickets.get(ticket);
+    
+    public Map<Ticket,Integer> getTickets() {
+		return tickets;
 	}
 }

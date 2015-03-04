@@ -79,7 +79,73 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     protected List<Move> validMoves(Colour player)
     {
+        int location = getPiece(player).getLocation();
+        Map<Ticket,Integer> tickets = getPiece(player).getTickets();
+        
+        return validMoves(player, location, tickets);
+    }
+    
+    protected List<Move> validMoves(Colour colour, int location, Map<Ticket,Integer> tickets)
+    {
         List<Move> moves = new ArrayList<Move>();
+        
+        List<MoveTicket> singleMoves = validSingleMoves(colour, location, tickets);
+        List<MoveDouble> doubleMoves = new ArrayList<MoveDouble>();
+        
+        if (tickets.get(Ticket.DoubleMove) > 0)
+        {
+            Map<Ticket,Integer> newTickets;
+            for (MoveTicket m1 : singleMoves)
+            {
+                Ticket usedTicket = m1.ticket;
+                newTickets = new HashMap<Ticket,Integer>(tickets);
+                int newNum = tickets.get(usedTicket) - 1;
+                newTickets.replace(usedTicket, newNum);
+                
+                for (MoveTicket m2 : validSingleMoves(colour, m1.target, newTickets))
+                {
+                    doubleMoves.add(new MoveDouble(colour, m1, m2));
+                }
+            }
+        }
+        
+        moves.addAll(singleMoves);
+        moves.addAll(doubleMoves);
+        if (colour != Colour.Black && moves.size() == 0)
+        {
+            moves.add(new MovePass(colour));
+        }
+        return moves;
+    }
+    
+    protected List<MoveTicket> validSingleMoves(Colour colour, int location, Map<Ticket,Integer> tickets)
+    {
+        List<MoveTicket> moves = new ArrayList<MoveTicket>();
+        
+        for (Edge<Integer,Route> e : graph.getEdges(location))
+        {
+            int other = e.other(location);
+            
+            for (Piece p : pieces)
+            {
+                if (p.colour != Colour.Black && p.getLocation() == other) continue;
+            }
+            
+            Ticket defaultTicket = Ticket.fromRoute(e.data());
+            Ticket secret = Ticket.SecretMove;
+            
+            if (tickets.get(defaultTicket) > 0)
+            {
+                MoveTicket defaultMove = new MoveTicket(colour, other, defaultTicket);
+                moves.add(defaultMove);
+            }
+            
+            if (defaultTicket != secret && tickets.get(secret) > 0)
+            {
+                MoveTicket secretMove = new MoveTicket(colour, other, secret);
+                moves.add(secretMove);
+            }
+        }
         
         return moves;
     }
@@ -139,7 +205,7 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public int getPlayerTickets(Colour colour, Ticket ticket)
     {
-        return getPiece(colour).getNumTickets(ticket);
+        return getPiece(colour).getTickets().get(ticket);
     }
     
     @Override
