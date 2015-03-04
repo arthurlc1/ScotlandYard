@@ -14,6 +14,7 @@ public class ScotlandYardModel extends ScotlandYard
     List<Piece> pieces;
     
     int currentPlayer;
+    int round;
     
     public ScotlandYardModel(int numberOfDetectives, List<Boolean> rounds, String graphFileName) throws IOException
     {
@@ -27,6 +28,7 @@ public class ScotlandYardModel extends ScotlandYard
         pieces = new ArrayList<Piece>(numberOfPlayers);
         
         currentPlayer = 0;
+        round = 0;
     }
     
     protected Piece getPiece(Colour colour)
@@ -38,14 +40,22 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     protected Move getPlayerMove(Colour colour)
     {
-        return null;
+        Piece p = getPiece(colour);
+        return p.player.notify(p.getLocation(), validMoves(colour));
     }
     
     @Override
     protected void nextPlayer()
     {
-        if (currentPlayer < pieces.size()) currentPlayer++;
-        else                                currentPlayer = 0;
+        if (currentPlayer < pieces.size())
+        {
+            currentPlayer++;
+        }
+        else
+        {
+            currentPlayer = 0;
+            round++;
+        }
     }
     
     @Override
@@ -69,7 +79,9 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     protected List<Move> validMoves(Colour player)
     {
-        return null;
+        List<Move> moves = new ArrayList<Move>();
+        
+        return moves;
     }
     
     @Override
@@ -81,7 +93,12 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public boolean join(Player player, Colour colour, int location, Map<Ticket, Integer> tickets)
     {
-        for (Piece p : pieces) if (p.getColour() == colour) return false;
+        boolean mrXHere = false;
+        for (Piece p : pieces)
+        {
+            if (p.getColour() == colour)       return false;
+            if (p.getColour() == Colour.Black) mrXHere = true;
+        }
         
         Piece newPiece;
         
@@ -92,6 +109,7 @@ public class ScotlandYardModel extends ScotlandYard
         }
         else
         {
+            if ( pieces.size() == numberOfPlayers - (mrXHere ? 0 : 1) ) return false;
             newPiece = new Detective(player, colour, location, tickets);
             pieces.add(newPiece);
         }
@@ -139,18 +157,18 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public Colour getCurrentPlayer()
     {
-        return null;
+        return pieces.get(currentPlayer).getColour();
     }
     
     @Override
     public int getRound()
     {
-        return 0;
+        return round;
     }
     
     @Override
     public List<Boolean> getRounds()
     {
-        return null;
+        return rounds;
     }
 }
