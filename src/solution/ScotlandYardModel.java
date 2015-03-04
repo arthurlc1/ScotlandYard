@@ -10,9 +10,8 @@ public class ScotlandYardModel extends ScotlandYard
     Graph<Integer,Route> graph;
     List<Boolean> rounds;
     
-    List<Colour> players;
-    MrX mrX;
-    Map<Colour,Detective> detectives;
+    int numberOfPlayers;
+    List<Piece> pieces;
     
     int currentPlayer;
     
@@ -24,12 +23,8 @@ public class ScotlandYardModel extends ScotlandYard
         this.graph = r.readGraph(graphFileName);
         this.rounds = new ArrayList<Boolean>(rounds);
         
-        players = new ArrayList(numberOfDetectives + 1);
-        players.add(Colour.Black);
-        for (int i=0; i<numberOfDetectives; i++) players.add(null);
-        
-        mrX = null;
-        detectives = new HashMap<Colour,Detective>();
+        numberOfPlayers = numberOfDetectives + 1;
+        pieces = new ArrayList<Piece>(numberOfPlayers);
         
         currentPlayer = 0;
     }
@@ -43,7 +38,7 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     protected void nextPlayer()
     {
-        if (currentPlayer < players.size()) currentPlayer++;
+        if (currentPlayer < pieces.size()) currentPlayer++;
         else                                currentPlayer = 0;
     }
     
@@ -80,6 +75,14 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public boolean join(Player player, Colour colour, int location, Map<Ticket, Integer> tickets)
     {
+        if (colour == Colour.Black)
+        {
+            
+        }
+        else
+        {
+            
+        }
         return false;
     }
     
