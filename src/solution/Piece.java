@@ -32,7 +32,7 @@ public abstract class Piece
 		return location;
 	}
 
-	public Map<Ticket, Integer> getTickets() {
-		return tickets;
+	public Integer getNumTickets(Ticket ticket) {
+		return tickets.get(ticket);
 	}
 }

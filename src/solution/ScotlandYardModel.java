@@ -29,6 +29,12 @@ public class ScotlandYardModel extends ScotlandYard
         currentPlayer = 0;
     }
     
+    protected Piece getPiece(Colour colour)
+    {
+        for (Piece p : pieces) if (p.getColour() == colour) return p;
+        return null;
+    }
+    
     @Override
     protected Move getPlayerMove(Colour colour)
     {
@@ -95,7 +101,9 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public List<Colour> getPlayers()
     {
-        return null;
+        List<Colour> colours = new ArrayList<Colour>(numberOfPlayers);
+        for (Piece p : pieces) colours.add(p.getColour());
+        return colours;
     }
     
     @Override
@@ -107,13 +115,13 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public int getPlayerLocation(Colour colour)
     {
-        return 0;
+        return getPiece(colour).getLocation();
     }
     
     @Override
     public int getPlayerTickets(Colour colour, Ticket ticket)
     {
-        return 0;
+        return getPiece(colour).getNumTickets(ticket);
     }
     
     @Override
@@ -125,7 +133,7 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public boolean isReady()
     {
-        return false;
+        return (pieces.size() == numberOfPlayers);
     }
     
     @Override
