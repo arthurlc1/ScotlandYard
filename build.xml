@@ -1,5 +1,5 @@
 <project name="scotlandyard" basedir="." default="main">
-
+    
 	<property name="src.dir" value="src" />
 	<property name="build.dir" value="bin" />
 	<property name="test.dir" value="tests" />
@@ -9,23 +9,28 @@
 	<property name="lib.dir" value="lib" />
 	<property name="test_main" value="TestRunner" />
     <property name="console_main" value="ConsoleGame" />
-
-
+    
 	<target name="clean">
 		<delete dir="${build.dir}" />
 	</target>
-
+    
 	<target name="compile">
 		<mkdir dir="${classes.dir}" />
 		<javac srcdir="${src.dir}" includeantruntime="false" destdir="${classes.dir}" />
 	</target>
-
+    
+    <target name="compile-xlint-unchecked">
+		<mkdir dir="${classes.dir}" />
+		<javac srcdir="${src.dir}" includeantruntime="false" destdir="${classes.dir}">
+            <compilerarg value="-Xlint:unchecked"/>
+        </javac>
+	</target>
+    
 	<target name="jar" depends="compile">
 		<mkdir dir="${jar.dir}"/>
 		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}" />
 	</target>
-
-
+    
     <target name="play" depends="jar">
         <java classname="${console_main}">
             <classpath>
@@ -34,18 +39,17 @@
             </classpath>
         </java>
     </target>
-
-
+    
 	<path id="tests_classpath">
 		<fileset dir="${lib.dir}" includes="**/*.jar" />
 		<fileset dir="${jar.dir}" includes="${ant.project.name}.jar" />
 	</path>
-
+    
 	<target name="compile-tests" depends="compile,jar">
 		<mkdir dir="${test_classes.dir}" />
 		<javac srcdir="${test.dir}" includeantruntime="false" destdir="${test_classes.dir}" classpathref="tests_classpath" />
 	</target>
-
+    
 	<target name="test" depends="compile-tests">
 		<junit>
 			<classpath>

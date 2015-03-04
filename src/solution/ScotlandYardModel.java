@@ -20,7 +20,7 @@ public class ScotlandYardModel extends ScotlandYard
     {
         super(numberOfDetectives, rounds, graphFileName);
         
-        GraphReader r = new ScotlandYardGraphReader();
+        ScotlandYardGraphReader r = new ScotlandYardGraphReader();
         this.graph = r.readGraph(graphFileName);
         this.rounds = new ArrayList<Boolean>(rounds);
         
@@ -34,7 +34,7 @@ public class ScotlandYardModel extends ScotlandYard
     protected Piece getPiece(Colour colour)
     {
         for (Piece p : pieces) if (p.getColour() == colour) return p;
-        return null;
+        return null;
     }
     
     @Override
@@ -104,7 +104,7 @@ public class ScotlandYardModel extends ScotlandYard
                 
                 for (MoveTicket m2 : validSingleMoves(colour, m1.target, newTickets))
                 {
-                    doubleMoves.add(new MoveDouble(colour, m1, m2));
+                    doubleMoves.add(new MoveDouble(colour, m1, m2));
                 }
             }
         }
@@ -113,9 +113,9 @@ public class ScotlandYardModel extends ScotlandYard
         moves.addAll(doubleMoves);
         if (colour != Colour.Black && moves.size() == 0)
         {
-            moves.add(new MovePass(colour));
+            moves.add(new MovePass(colour));
         }
-        return moves;
+        return moves;
     }
     
     protected List<MoveTicket> validSingleMoves(Colour colour, int location, Map<Ticket,Integer> tickets)
@@ -148,10 +148,10 @@ public class ScotlandYardModel extends ScotlandYard
             {
                 MoveTicket secretMove = new MoveTicket(colour, other, secret);
                 moves.add(secretMove);
-            }
+            }
         }
         
-        return moves;
+        return moves;
     }
     
     @Override
@@ -175,13 +175,13 @@ public class ScotlandYardModel extends ScotlandYard
         if (colour == Colour.Black)
         {
             newPiece = new MrX(player, colour, location, tickets);
-            pieces.add(0, newPiece);
+            pieces.add(0, newPiece);
         }
         else
         {
             if ( pieces.size() == numberOfPlayers - (mrXHere ? 0 : 1) ) return false;
             newPiece = new Detective(player, colour, location, tickets);
-            pieces.add(newPiece);
+            pieces.add(newPiece);
         }
         return true;
     }
