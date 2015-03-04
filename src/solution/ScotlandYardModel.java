@@ -75,15 +75,21 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public boolean join(Player player, Colour colour, int location, Map<Ticket, Integer> tickets)
     {
+        for (Piece p : pieces) if (p.getColour() == colour) return false;
+        
+        Piece newPiece;
+        
         if (colour == Colour.Black)
         {
-            
+            newPiece = new MrX(player, colour, location, tickets);
+            pieces.add(0, newPiece);
         }
         else
         {
-            
+            newPiece = new Detective(player, colour, location, tickets);
+            pieces.add(newPiece);
         }
-        return false;
+        return true;
     }
     
     @Override
