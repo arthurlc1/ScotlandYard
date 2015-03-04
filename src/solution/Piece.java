@@ -4,8 +4,9 @@ import scotlandyard.*;
 
 import java.util.*;
 
-public class Piece
+public abstract class Piece
 {
     Player player;
     int location;
+    Map<Ticket,Integer> tickets;
 }
