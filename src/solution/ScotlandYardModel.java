@@ -19,8 +19,6 @@ public class ScotlandYardModel extends ScotlandYard
     int currentPlayer;
     int round;
     
-    boolean detectivesStuck;
-    
     public ScotlandYardModel(int numberOfDetectives, List<Boolean> rounds, String graphFileName) throws IOException
     {
         super(numberOfDetectives, rounds, graphFileName);
@@ -36,8 +34,6 @@ public class ScotlandYardModel extends ScotlandYard
         
         currentPlayer = 0;
         round = 0;
-        
-        detectivesStuck = false;
     }
     
     @Override
@@ -183,12 +179,10 @@ public class ScotlandYardModel extends ScotlandYard
             }
             ((MrX) toMove).play(move, rounds.get(round));
             round++;
-            detectivesStuck = true;
         }
         else
         {
             ((Detective) toMove).play(move, (MrX) pieces.get(0));
-            detectivesStuck = false;
         }
         for (Spectator s : spectators) s.notify(toPublish);
     }
@@ -259,18 +253,14 @@ public class ScotlandYardModel extends ScotlandYard
     
     protected boolean timeOut()
     {
+        boolean allStuck = true;
         for (Piece p : pieces)
         {
             if (p instanceof MrX) continue;
-            
-            boolean noTickets = true;
-            for (Ticket t : Ticket.values())
-            {
-                if (p.getTickets().get(t) > 0) noTickets = false;
-            }
-            if (noTickets) return true;
+            Move firstMove = validMoves(p.getColour()).get(0);
+            if ( !(firstMove instanceof MovePass) ) allStuck = false;
         }
-        return (currentPlayer == 0 && (detectivesStuck || round == rounds.size() - 1));
+        return (allStuck || (currentPlayer == 0 && round == rounds.size() - 1));
     }
     
     protected boolean mrXCaught()
@@ -294,9 +284,9 @@ public class ScotlandYardModel extends ScotlandYard
     {
         Set<Colour> winners = new HashSet<Colour>();
         
-        boolean mrXWins = (timeOut() && !mrXCaught());
         if (isGameOver())
         {
+            boolean mrXWins = (timeOut() && !mrXCaught());
             if (mrXWins) winners.add(black);
             else
             {
