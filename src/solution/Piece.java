@@ -35,4 +35,13 @@ public abstract class Piece
     public Map<Ticket,Integer> getTickets() {
 		return tickets;
 	}
+    
+    public void play(MoveTicket move)
+    {
+        location = move.target;
+        
+        usedTicket = move.ticket;
+        newNum = tickets.get(usedTicket) - 1;
+        tickets.replace(usedTicket, newNum);
+    }
 }

@@ -14,4 +14,10 @@ public class MrX extends Piece
         
         lastKnownLocation = 0;
     }
+    
+    public void play(MoveTicket move, boolean toReveal)
+    {
+        play(move);
+        if (toReveal) lastKnownLocation = location;
+    }
 }
