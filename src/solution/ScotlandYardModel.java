@@ -32,7 +32,7 @@ public class ScotlandYardModel extends ScotlandYard
         numberOfPlayers = numberOfDetectives + 1;
         pieces = new ArrayList<Piece>(numberOfPlayers);
         
-        spectators = new ArrayList<Spectators>();
+        spectators = new ArrayList<Spectator>();
         
         currentPlayer = 0;
         round = 0;
@@ -173,8 +173,14 @@ public class ScotlandYardModel extends ScotlandYard
     protected void play(MoveTicket move)
     {
         Piece toMove = getPiece(move.colour);
+        MoveTicket toPublish = move;
+        
         if (toMove instanceof MrX)
         {
+            if (!rounds.get(round))
+            {
+                toPublish = new MoveTicket(black, ((MrX) toMove).oldLocation(), move.ticket);
+            }
             ((MrX) toMove).play(move, rounds.get(round));
             round++;
             detectivesStuck = true;
@@ -184,11 +190,14 @@ public class ScotlandYardModel extends ScotlandYard
             ((Detective) toMove).play(move, (MrX) pieces.get(0));
             detectivesStuck = false;
         }
+        for (Spectator s : spectators) s.notify(toPublish);
     }
     
     @Override
     protected void play(MoveDouble move)
     {
+        for (Spectator s : spectators) s.notify(move);
+        
         play((MoveTicket) move.moves.get(0));
         play((MoveTicket) move.moves.get(1));
     }
@@ -196,7 +205,7 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     protected void play(MovePass move)
     {
-        
+        for (Spectator s : spectators) s.notify(move);
     }
     
     @Override
@@ -226,7 +235,7 @@ public class ScotlandYardModel extends ScotlandYard
         Piece piece = getPiece(colour);
         boolean toReveal = rounds.get(round);
         
-        if (colour == black && !toReveal) return ((MrX) piece).lastKnownLocation();
+        if (colour == black && !toReveal) return ((MrX) piece).oldLocation();
         else                              return piece.getLocation();
     }
     
