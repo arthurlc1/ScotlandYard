@@ -15,6 +15,17 @@ public class MrX extends Piece
         lastKnownLocation = 0;
     }
     
+    public int lastKnownLocation()
+    {
+        return lastKnownLocation;
+    }
+    
+    public void giveTicket(Ticket ticket)
+    {
+        int newNum = tickets.get(ticket) + 1;
+        tickets.replace(ticket, newNum);
+    }
+    
     public void play(MoveTicket move, boolean toReveal)
     {
         play(move);

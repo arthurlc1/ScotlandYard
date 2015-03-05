@@ -16,6 +16,10 @@ public class ScotlandYardModel extends ScotlandYard
     int currentPlayer;
     int round;
     
+    boolean detectivesTrapped;
+    
+    static Colour black = Colour.Black;
+    
     public ScotlandYardModel(int numberOfDetectives, List<Boolean> rounds, String graphFileName) throws IOException
     {
         super(numberOfDetectives, rounds, graphFileName);
@@ -29,6 +33,8 @@ public class ScotlandYardModel extends ScotlandYard
         
         currentPlayer = 0;
         round = 0;
+        
+        detectivesTrapped = false;
     }
     
     protected Piece getPiece(Colour colour)
@@ -56,19 +62,25 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     protected void play(MoveTicket move)
     {
-        pieceToMove = getPiece(move.colour);
-        if (pieceToMove instanceof MrX)
+        Piece toMove = getPiece(move.colour);
+        if (toMove instanceof MrX)
         {
-            pieceToMove.play(move, rounds.get(round));
+            ((MrX) toMove).play(move, rounds.get(round));
             round++;
+            detectivesTrapped = true;
         }
-        else pieceToMove.play(move);
+        else
+        {
+            ((Detective) toMove).play(move, (MrX) pieces.get(0));
+            detectivesTrapped = false;
+        }
     }
     
     @Override
     protected void play(MoveDouble move)
     {
-        for (MoveTicket singleMove : move.moves) play(singleMove);
+        play((MoveTicket) move.moves.get(0));
+        play((MoveTicket) move.moves.get(1));
     }
     
     @Override
@@ -112,7 +124,7 @@ public class ScotlandYardModel extends ScotlandYard
         
         moves.addAll(singleMoves);
         moves.addAll(doubleMoves);
-        if (colour != Colour.Black && moves.size() == 0)
+        if (colour != black && moves.size() == 0)
         {
             moves.add(new MovePass(colour));
         }
@@ -126,7 +138,6 @@ public class ScotlandYardModel extends ScotlandYard
         for (Edge<Integer,Route> e : graph.getEdges(location))
         {
             int other = e.other(location);
-            Colour black = Colour.Black;
             boolean occupied = false;
             
             for (Piece p : pieces)
@@ -166,13 +177,13 @@ public class ScotlandYardModel extends ScotlandYard
         boolean mrXHere = false;
         for (Piece p : pieces)
         {
-            if (p.getColour() == colour)       return false;
-            if (p.getColour() == Colour.Black) mrXHere = true;
+            if (p.getColour() == colour) return false;
+            if (p.getColour() == black)  mrXHere = true;
         }
         
         Piece newPiece;
         
-        if (colour == Colour.Black)
+        if (colour == black)
         {
             newPiece = new MrX(player, colour, location, tickets);
             pieces.add(0, newPiece);
@@ -196,7 +207,7 @@ public class ScotlandYardModel extends ScotlandYard
     
     protected boolean timeOut()
     {
-        return (round == rounds.size());
+        return (currentPlayer == 0 && (detectivesTrapped || round == rounds.size()));
     }
     
     protected boolean mrXCaught()
@@ -206,7 +217,7 @@ public class ScotlandYardModel extends ScotlandYard
             if (p instanceof MrX) continue;
             else if (p.getLocation() == pieces.get(0).getLocation()) return true;
         }
-        return false;
+        return (currentPlayer == 0 && validMoves(black).size() == 0);
     }
     
     @Override
@@ -223,7 +234,7 @@ public class ScotlandYardModel extends ScotlandYard
         boolean mrXWins = (timeOut() && !mrXCaught());
         if (isGameOver())
         {
-            if (mrXWins) winners.add(Colour.Black);
+            if (mrXWins) winners.add(black);
             else
             {
                 for (Piece p : pieces)
@@ -238,7 +249,11 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public int getPlayerLocation(Colour colour)
     {
-        return getPiece(colour).getLocation();
+        Piece piece = getPiece(colour);
+        boolean toReveal = rounds.get(round);
+        
+        if (colour == black && !toReveal) return ((MrX) piece).lastKnownLocation();
+        else                              return piece.getLocation();
     }
     
     @Override

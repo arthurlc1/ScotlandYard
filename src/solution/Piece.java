@@ -40,8 +40,8 @@ public abstract class Piece
     {
         location = move.target;
         
-        usedTicket = move.ticket;
-        newNum = tickets.get(usedTicket) - 1;
+        Ticket usedTicket = move.ticket;
+        int newNum = tickets.get(usedTicket) - 1;
         tickets.replace(usedTicket, newNum);
     }
 }

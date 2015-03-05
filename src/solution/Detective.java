@@ -10,4 +10,10 @@ public class Detective extends Piece
     {
         super(player, colour, location, tickets);
     }
+    
+    public void play(MoveTicket move, MrX recipient)
+    {
+        play(move);
+        recipient.giveTicket(move.ticket);
+    }
 }
