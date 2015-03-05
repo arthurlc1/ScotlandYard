@@ -12,13 +12,14 @@ public class ScotlandYardModel extends ScotlandYard
     
     int numberOfPlayers;
     List<Piece> pieces;
+    static Colour black = Colour.Black;
+    
+    List<Spectator> spectators;
     
     int currentPlayer;
     int round;
     
     boolean detectivesStuck;
-    
-    static Colour black = Colour.Black;
     
     public ScotlandYardModel(int numberOfDetectives, List<Boolean> rounds, String graphFileName) throws IOException
     {
@@ -31,62 +32,56 @@ public class ScotlandYardModel extends ScotlandYard
         numberOfPlayers = numberOfDetectives + 1;
         pieces = new ArrayList<Piece>(numberOfPlayers);
         
+        spectators = new ArrayList<Spectators>();
+        
         currentPlayer = 0;
         round = 0;
         
         detectivesStuck = false;
     }
     
+    @Override
+    public boolean join(Player player, Colour colour, int location, Map<Ticket, Integer> tickets)
+    {
+        boolean mrXHere = false;
+        for (Piece p : pieces)
+        {
+            if (p.getColour() == colour) return false;
+            if (p.getColour() == black)  mrXHere = true;
+        }
+        
+        Piece newPiece;
+        
+        if (colour == black)
+        {
+            newPiece = new MrX(player, colour, location, tickets);
+            pieces.add(0, newPiece);
+        }
+        else
+        {
+            if ( pieces.size() == numberOfPlayers - (mrXHere ? 0 : 1) ) return false;
+            newPiece = new Detective(player, colour, location, tickets);
+            pieces.add(newPiece);
+        }
+        return true;
+    }
+    
+    @Override
+    public void spectate(Spectator spectator)
+    {
+        spectators.add(spectator);
+    }
+    
+    @Override
+    public boolean isReady()
+    {
+        return (pieces.size() == numberOfPlayers);
+    }
+    
     protected Piece getPiece(Colour colour)
     {
         for (Piece p : pieces) if (p.getColour() == colour) return p;
         return null;
-    }
-    
-    @Override
-    protected Move getPlayerMove(Colour colour)
-    {
-        Piece p = getPiece(colour);
-        List<Move> moves = validMoves(colour);
-        Move move = p.player.notify(p.getLocation(), moves);
-        return moves.contains(move) ? move : null;
-    }
-    
-    @Override
-    protected void nextPlayer()
-    {
-        if (currentPlayer < pieces.size() - 1) currentPlayer++;
-        else                               currentPlayer = 0;
-    }
-    
-    @Override
-    protected void play(MoveTicket move)
-    {
-        Piece toMove = getPiece(move.colour);
-        if (toMove instanceof MrX)
-        {
-            ((MrX) toMove).play(move, rounds.get(round));
-            round++;
-            detectivesStuck = true;
-        }
-        else
-        {
-            ((Detective) toMove).play(move, (MrX) pieces.get(0));
-            detectivesStuck = false;
-        }
-    }
-    
-    @Override
-    protected void play(MoveDouble move)
-    {
-        play((MoveTicket) move.moves.get(0));
-        play((MoveTicket) move.moves.get(1));
-    }
-    
-    @Override
-    protected void play(MovePass move)
-    {
-        
     }
     
     @Override
@@ -166,35 +161,49 @@ public class ScotlandYardModel extends ScotlandYard
     }
     
     @Override
-    public void spectate(Spectator spectator)
+    protected Move getPlayerMove(Colour colour)
+    {
+        Piece p = getPiece(colour);
+        List<Move> moves = validMoves(colour);
+        Move move = p.player.notify(p.getLocation(), moves);
+        return moves.contains(move) ? move : null;
+    }
+    
+    @Override
+    protected void play(MoveTicket move)
+    {
+        Piece toMove = getPiece(move.colour);
+        if (toMove instanceof MrX)
+        {
+            ((MrX) toMove).play(move, rounds.get(round));
+            round++;
+            detectivesStuck = true;
+        }
+        else
+        {
+            ((Detective) toMove).play(move, (MrX) pieces.get(0));
+            detectivesStuck = false;
+        }
+    }
+    
+    @Override
+    protected void play(MoveDouble move)
+    {
+        play((MoveTicket) move.moves.get(0));
+        play((MoveTicket) move.moves.get(1));
+    }
+    
+    @Override
+    protected void play(MovePass move)
     {
         
     }
     
     @Override
-    public boolean join(Player player, Colour colour, int location, Map<Ticket, Integer> tickets)
+    protected void nextPlayer()
     {
-        boolean mrXHere = false;
-        for (Piece p : pieces)
-        {
-            if (p.getColour() == colour) return false;
-            if (p.getColour() == black)  mrXHere = true;
-        }
-        
-        Piece newPiece;
-        
-        if (colour == black)
-        {
-            newPiece = new MrX(player, colour, location, tickets);
-            pieces.add(0, newPiece);
-        }
-        else
-        {
-            if ( pieces.size() == numberOfPlayers - (mrXHere ? 0 : 1) ) return false;
-            newPiece = new Detective(player, colour, location, tickets);
-            pieces.add(newPiece);
-        }
-        return true;
+        if (currentPlayer < pieces.size() - 1) currentPlayer++;
+        else                               currentPlayer = 0;
     }
     
     @Override
@@ -203,6 +212,40 @@ public class ScotlandYardModel extends ScotlandYard
         List<Colour> colours = new ArrayList<Colour>(numberOfPlayers);
         for (Piece p : pieces) colours.add(p.getColour());
         return colours;
+    }
+    
+    @Override
+    public Colour getCurrentPlayer()
+    {
+        return pieces.get(currentPlayer).getColour();
+    }
+    
+    @Override
+    public int getPlayerLocation(Colour colour)
+    {
+        Piece piece = getPiece(colour);
+        boolean toReveal = rounds.get(round);
+        
+        if (colour == black && !toReveal) return ((MrX) piece).lastKnownLocation();
+        else                              return piece.getLocation();
+    }
+    
+    @Override
+    public int getPlayerTickets(Colour colour, Ticket ticket)
+    {
+        return getPiece(colour).getTickets().get(ticket);
+    }
+    
+    @Override
+    public int getRound()
+    {
+        return round;
+    }
+    
+    @Override
+    public List<Boolean> getRounds()
+    {
+        return rounds;
     }
     
     protected boolean timeOut()
@@ -255,45 +298,5 @@ public class ScotlandYardModel extends ScotlandYard
             }
         }
         return winners;
-    }
-    
-    @Override
-    public int getPlayerLocation(Colour colour)
-    {
-        Piece piece = getPiece(colour);
-        boolean toReveal = rounds.get(round);
-        
-        if (colour == black && !toReveal) return ((MrX) piece).lastKnownLocation();
-        else                              return piece.getLocation();
-    }
-    
-    @Override
-    public int getPlayerTickets(Colour colour, Ticket ticket)
-    {
-        return getPiece(colour).getTickets().get(ticket);
-    }
-    
-    @Override
-    public boolean isReady()
-    {
-        return (pieces.size() == numberOfPlayers);
-    }
-    
-    @Override
-    public Colour getCurrentPlayer()
-    {
-        return pieces.get(currentPlayer).getColour();
-    }
-    
-    @Override
-    public int getRound()
-    {
-        return round;
-    }
-    
-    @Override
-    public List<Boolean> getRounds()
-    {
-        return rounds;
     }
 }
