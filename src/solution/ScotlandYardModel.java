@@ -16,7 +16,7 @@ public class ScotlandYardModel extends ScotlandYard
     int currentPlayer;
     int round;
     
-    boolean detectivesTrapped;
+    boolean detectivesStuck;
     
     static Colour black = Colour.Black;
     
@@ -34,7 +34,7 @@ public class ScotlandYardModel extends ScotlandYard
         currentPlayer = 0;
         round = 0;
         
-        detectivesTrapped = false;
+        detectivesStuck = false;
     }
     
     protected Piece getPiece(Colour colour)
@@ -55,7 +55,7 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     protected void nextPlayer()
     {
-        if (currentPlayer < pieces.size()) currentPlayer++;
+        if (currentPlayer < pieces.size() - 1) currentPlayer++;
         else                               currentPlayer = 0;
     }
     
@@ -67,12 +67,12 @@ public class ScotlandYardModel extends ScotlandYard
         {
             ((MrX) toMove).play(move, rounds.get(round));
             round++;
-            detectivesTrapped = true;
+            detectivesStuck = true;
         }
         else
         {
             ((Detective) toMove).play(move, (MrX) pieces.get(0));
-            detectivesTrapped = false;
+            detectivesStuck = false;
         }
     }
     
@@ -207,7 +207,18 @@ public class ScotlandYardModel extends ScotlandYard
     
     protected boolean timeOut()
     {
-        return (currentPlayer == 0 && (detectivesTrapped || round == rounds.size()));
+        for (Piece p : pieces)
+        {
+            if (p instanceof MrX) continue;
+            
+            boolean noTickets = true;
+            for (Ticket t : Ticket.values())
+            {
+                if (p.getTickets().get(t) > 0) noTickets = false;
+            }
+            if (noTickets) return true;
+        }
+        return (currentPlayer == 0 && (detectivesStuck || round == rounds.size() - 1));
     }
     
     protected boolean mrXCaught()
@@ -223,7 +234,7 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public boolean isGameOver()
     {
-        return (timeOut() || mrXCaught());
+        return (isReady() && (timeOut() || mrXCaught() || pieces.size() == 1));
     }
     
     @Override
