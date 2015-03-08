@@ -6,11 +6,11 @@ import java.util.*;
 
 public abstract class Piece
 {
-	Player player;
-	Colour colour;
+    public final Player player;
+    public final Colour colour;
     int location;
-    Map<Ticket,Integer> tickets;
-    
+    public final Map<Ticket,Integer> tickets;
+
     public Piece(Player player, Colour colour, int location, Map<Ticket,Integer> tickets)
     {
         this.player = player;
@@ -18,30 +18,15 @@ public abstract class Piece
         this.location = location;
         this.tickets = tickets;
     }
-    
-    public Player getPlayer() {
-		return player;
-	}
-    
-    public Colour getColour()
+
+    public int location()
     {
-        return colour;
+        return location;
     }
-    
-	public int getLocation() {
-		return location;
-	}
-    
-    public Map<Ticket,Integer> getTickets() {
-		return tickets;
-	}
-    
+
     public void play(MoveTicket move)
     {
         location = move.target;
-        
-        Ticket usedTicket = move.ticket;
-        int newNum = tickets.get(usedTicket) - 1;
-        tickets.replace(usedTicket, newNum);
+        tickets.replace(move.ticket, tickets.get(move.ticket) - 1);
     }
 }

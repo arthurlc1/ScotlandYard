@@ -6,29 +6,28 @@ import java.util.*;
 
 public class MrX extends Piece
 {
-    int oldLocation;
+    private int lastSeen;
     
-    public MrX(Player player, Colour colour, int location, Map<Ticket,Integer> tickets)
+    public MrX(Player player, Colour colour, int location, boolean reveal, Map<Ticket,Integer> tickets)
     {
         super(player, colour, location, tickets);
-        
-        oldLocation = 0;
+        lastSeen = reveal ? location : 0;
     }
     
-    public int oldLocation()
+    public int lastSeen()
     {
-        return oldLocation;
+        return lastSeen;
     }
     
     public void giveTicket(Ticket ticket)
     {
-        int newNum = tickets.get(ticket) + 1;
-        tickets.replace(ticket, newNum);
+        tickets.replace(ticket, tickets.get(ticket) + 1);
     }
     
-    public void play(MoveTicket move, boolean toReveal)
+    public void play(MoveTicket move, boolean reveal)
     {
         play(move);
-        if (toReveal) oldLocation = location;
+        if (reveal) lastSeen = location;
+        //System.err.println("Moving to " + location + ", last seen at " + lastSeen + ".");
     }
 }
