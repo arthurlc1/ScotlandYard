@@ -41,10 +41,8 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public boolean join(Player player, Colour colour, int location, Map<Ticket, Integer> tickets)
     {
-        for (Piece p : pieces) if (p.colour == colour)return false;
-        
+        for (Piece p : pieces) if (p.colour == colour) return false;
         Piece newPiece;
-        
         if (colour == black)
         {
             newPiece = new MrX(player, colour, location, rounds.get(0), tickets);
@@ -81,9 +79,12 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     protected List<Move> validMoves(Colour colour)
     {
-        Piece p = getPiece(colour);
-        //if (mrXCaught()) return Arrays.asList(new MovePass(colour));
-        return validMoves(colour, p.location(), p.tickets);
+        Piece piece = getPiece(colour);
+        if (colour != black && (xCaught() || roundsUp()))
+        {
+            return Arrays.asList(new MovePass(colour));
+        }
+        else return validMoves(colour, piece.find(), piece.tickets);
     }
     
     protected List<Move> validMoves(Colour colour, int location, Map<Ticket,Integer> tickets)
@@ -119,23 +120,20 @@ public class ScotlandYardModel extends ScotlandYard
         for (Edge<Integer,Route> e : graph.getEdges(location))
         {
             int other = e.other(location);
-            boolean occupied = false;
-            for (Piece p : pieces) if (p != mrX && p.location() == other) occupied = true;
-            if (occupied) continue;
+            boolean occ = false;
+            for (Piece p : pieces) if (p != mrX && p.find() == other) occ = true;
+            if (occ) continue;
             
             Ticket defaultTicket = Ticket.fromRoute(e.data());
             Ticket secret = Ticket.SecretMove;
             
             if (tickets.get(defaultTicket) > 0)
             {
-                MoveTicket defaultMove = new MoveTicket(colour, other, defaultTicket);
-                moves.add(defaultMove);
+                moves.add(new MoveTicket(colour, other, defaultTicket));
             }
-            
             if (defaultTicket != secret && tickets.get(secret) > 0)
             {
-                MoveTicket secretMove = new MoveTicket(colour, other, secret);
-                moves.add(secretMove);
+                moves.add(new MoveTicket(colour, other, secret));
             }
         }
         return moves;
@@ -146,7 +144,7 @@ public class ScotlandYardModel extends ScotlandYard
     {
         Piece p = getPiece(colour);
         List<Move> moves = validMoves(colour);
-        Move move = p.player.notify(p.location(), moves);
+        Move move = p.player.notify(p.find(), moves);
         return moves.contains(move) ? move : null;
     }
     
@@ -160,10 +158,7 @@ public class ScotlandYardModel extends ScotlandYard
             mrX.play(move, reveal);
             move = new MoveTicket(black, mrX.lastSeen(), move.ticket);
         }
-        else
-        {
-            ((Detective) toMove).play(move, mrX);
-        }
+        else ((Detective) toMove).play(move, mrX);
         for (Spectator s : spectators) s.notify(move);
     }
     
@@ -205,7 +200,7 @@ public class ScotlandYardModel extends ScotlandYard
     public int getPlayerLocation(Colour colour)
     {
         Piece toFind = getPiece(colour);
-        return (toFind == mrX) ? mrX.lastSeen() : toFind.location();
+        return (toFind == mrX) ? mrX.lastSeen() : toFind.find();
     }
     
     @Override
@@ -226,7 +221,13 @@ public class ScotlandYardModel extends ScotlandYard
         return rounds;
     }
     
-    protected boolean timeOut()
+    protected boolean roundsUp()
+    {
+        int end = rounds.size() - 1;
+        return ((currentPlayer == 0 && round == end) || round > end);
+    }
+    
+    protected boolean dStuck()
     {
         boolean allStuck = true;
         for (Piece p : pieces)
@@ -234,23 +235,24 @@ public class ScotlandYardModel extends ScotlandYard
             if (p == mrX) continue;
             if (validMoves(p.colour).get(0) instanceof MoveTicket) allStuck = false;
         }
-        return (allStuck || (currentPlayer == 0 && round == rounds.size() - 1));
+        return allStuck;
     }
     
-    protected boolean mrXCaught()
+    protected boolean xCaught()
     {
-        for (Piece p : pieces)
-        {
-            if (p == mrX) continue;
-            else if (p.location() == mrX.location()) return true;
-        }
+        for (Piece p : pieces) if (p != mrX && p.find() == mrX.find()) return true;
+        return false;
+    }
+    
+    protected boolean xTrapped()
+    {
         return (currentPlayer == 0 && validMoves(black).size() == 0);
     }
     
     @Override
     public boolean isGameOver()
     {
-        return (isReady() && (timeOut() || mrXCaught() || pieces.size() == 1));
+        return (isReady() && (roundsUp() || dStuck() || xCaught() || xTrapped() || pieces.size() == 1));
     }
     
     @Override
@@ -259,8 +261,8 @@ public class ScotlandYardModel extends ScotlandYard
         Set<Colour> winners = new HashSet<Colour>();
         if (isGameOver())
         {
-            boolean mrXWins = (timeOut() && !mrXCaught());
-            if (mrXWins) winners.add(black);
+            boolean xWins = ((roundsUp() || dStuck()) && !(xCaught() || xTrapped()));
+            if (xWins) winners.add(black);
             else for (Colour c : getPlayers()) if (c != black) winners.add(c);
         }
         return winners;

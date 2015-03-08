@@ -19,7 +19,7 @@ public abstract class Piece
         this.tickets = tickets;
     }
 
-    public int location()
+    public int find()
     {
         return location;
     }
