@@ -21,6 +21,7 @@ public class ScotlandYardModel extends ScotlandYard
     private int round;
     private int currentPlayer;
     
+    // Constructor to initialise all fields.
     public ScotlandYardModel(int numberOfDetectives, List<Boolean> rounds, String graphFileName) throws IOException
     {
         super(numberOfDetectives, rounds, graphFileName);
@@ -38,6 +39,7 @@ public class ScotlandYardModel extends ScotlandYard
         round = 0;
     }
     
+    // Add a new piece. Return false iff the piece is not permitted to join.
     @Override
     public boolean join(Player player, Colour colour, int location, Map<Ticket, Integer> tickets)
     {
@@ -58,61 +60,58 @@ public class ScotlandYardModel extends ScotlandYard
         return true;
     }
     
+    // Add a spectator to the list of spectators to be notified of moves.
     @Override
     public void spectate(Spectator spectator)
     {
         spectators.add(spectator);
     }
     
+    // Return true iff the expected number of players have joined the game.
     @Override
     public boolean isReady()
     {
         return (pieces.size() == numPlayers);
     }
     
+    // Return a piece given its colour. Return null if no such piece exists.
     protected Piece getPiece(Colour colour)
     {
         for (Piece p : pieces) if (p.colour == colour) return p;
         return null;
     }
     
+    // Return the list of valid single or double moves of a piece, given its colour.
     @Override
-    protected List<Move> validMoves(Colour colour)
+    protected List<Move> validMoves(Colour c)
     {
-        Piece piece = getPiece(colour);
-        if (colour != black && (xCaught() || roundsUp()))
-        {
-            return Arrays.asList(new MovePass(colour));
-        }
-        else return validMoves(colour, piece.find(), piece.tickets);
-    }
-    
-    protected List<Move> validMoves(Colour colour, int location, Map<Ticket,Integer> tickets)
-    {
+        Piece p = getPiece(c);
+        if (p != mrX && (xCaught() || timeUp())) return Arrays.asList(new MovePass(c));
         List<Move> moves = new ArrayList<Move>();
-        
-        List<MoveTicket> singleMoves = validSingleMoves(colour, location, tickets);
+        List<MoveTicket> singleMoves = validSingleMoves(c, p.find(), p.tickets);
         List<MoveDouble> doubleMoves = new ArrayList<MoveDouble>();
-        
-        if (tickets.get(Ticket.DoubleMove) > 0)
+        if (p.tickets.get(Ticket.DoubleMove) > 0)
         {
+            // For each valid first move, include a double move for each valid
+            // move from the new location.
             Map<Ticket,Integer> newTickets;
             for (MoveTicket m1 : singleMoves)
             {
-                newTickets = new HashMap<Ticket,Integer>(tickets);
-                newTickets.replace(m1.ticket, tickets.get(m1.ticket) - 1);
-                for (MoveTicket m2 : validSingleMoves(colour, m1.target, newTickets))
+                newTickets = new HashMap<Ticket,Integer>(p.tickets);
+                newTickets.replace(m1.ticket, p.tickets.get(m1.ticket) - 1);
+                for (MoveTicket m2 : validSingleMoves(c, m1.target, newTickets))
                 {
-                    doubleMoves.add(new MoveDouble(colour, m1, m2));
+                    doubleMoves.add(new MoveDouble(c, m1, m2));
                 }
             }
         }
         moves.addAll(singleMoves);
         moves.addAll(doubleMoves);
-        if (colour != black && moves.size() == 0) moves.add(new MovePass(colour));
+        if (p != mrX && moves.size() == 0) moves.add(new MovePass(c));
         return moves;
     }
     
+    // Return the valid single moves from a location given a number of tickets.
     protected List<MoveTicket> validSingleMoves(Colour colour, int location, Map<Ticket,Integer> tickets)
     {
         List<MoveTicket> moves = new ArrayList<MoveTicket>();
@@ -139,6 +138,7 @@ public class ScotlandYardModel extends ScotlandYard
         return moves;
     }
     
+    // Notify a player with their valid moves and return their choice.
     @Override
     protected Move getPlayerMove(Colour colour)
     {
@@ -148,6 +148,7 @@ public class ScotlandYardModel extends ScotlandYard
         return moves.contains(move) ? move : null;
     }
     
+    // Play a given single move. Notify spectators.
     @Override
     protected void play(MoveTicket move)
     {
@@ -162,6 +163,7 @@ public class ScotlandYardModel extends ScotlandYard
         for (Spectator s : spectators) s.notify(move);
     }
     
+    // Play a given double move. Notify spectators.
     @Override
     protected void play(MoveDouble move)
     {
@@ -170,18 +172,21 @@ public class ScotlandYardModel extends ScotlandYard
         play((MoveTicket) move.moves.get(1));
     }
     
+    // No change to locations, but notify spectators that a pass has been played.
     @Override
     protected void play(MovePass move)
     {
         for (Spectator s : spectators) s.notify(move);
     }
     
+    // Rotate through the list of players.
     @Override
     protected void nextPlayer()
     {
         currentPlayer = (currentPlayer + 1) % pieces.size();
     }
     
+    // Return the list of colours in the game.
     @Override
     public List<Colour> getPlayers()
     {
@@ -190,12 +195,14 @@ public class ScotlandYardModel extends ScotlandYard
         return colours;
     }
     
+    // Return the colour of the current player.
     @Override
     public Colour getCurrentPlayer()
     {
         return pieces.get(currentPlayer).colour;
     }
     
+    // Return the location of a piece given its colour.
     @Override
     public int getPlayerLocation(Colour colour)
     {
@@ -203,30 +210,35 @@ public class ScotlandYardModel extends ScotlandYard
         return (toFind == mrX) ? mrX.lastSeen() : toFind.find();
     }
     
+    // Return the number of tickets of a given type that a piece has, given its colour.
     @Override
     public int getPlayerTickets(Colour colour, Ticket ticket)
     {
         return getPiece(colour).tickets.get(ticket);
     }
     
+    // Return the current round number.
     @Override
     public int getRound()
     {
         return round;
     }
     
+    // Return the list of rounds.
     @Override
     public List<Boolean> getRounds()
     {
         return rounds;
     }
     
-    protected boolean roundsUp()
+    // Return true iff there are no more rounds in the game.
+    protected boolean timeUp()
     {
         int end = rounds.size() - 1;
         return ((currentPlayer == 0 && round == end) || round > end);
     }
     
+    // Return true iff none of the detectives can move.
     protected boolean dStuck()
     {
         boolean allStuck = true;
@@ -238,30 +250,34 @@ public class ScotlandYardModel extends ScotlandYard
         return allStuck;
     }
     
+    // Return true iff one of the detectives has moved onto Mr X's location.
     protected boolean xCaught()
     {
         for (Piece p : pieces) if (p != mrX && p.find() == mrX.find()) return true;
         return false;
     }
     
+    // Return true iff Mr X cannot move on his turn.
     protected boolean xTrapped()
     {
         return (currentPlayer == 0 && validMoves(black).size() == 0);
     }
     
+    // Return true iff any one of the endgame conditions has been met.
     @Override
     public boolean isGameOver()
     {
-        return (isReady() && (roundsUp() || dStuck() || xCaught() || xTrapped() || pieces.size() == 1));
+        return (isReady() && (timeUp() || dStuck() || xCaught() || xTrapped() || pieces.size() == 1));
     }
     
+    // If Mr X has won return {black}. Otherwise return {colours} / {black}.
     @Override
     public Set<Colour> getWinningPlayers()
     {
         Set<Colour> winners = new HashSet<Colour>();
         if (isGameOver())
         {
-            boolean xWins = ((roundsUp() || dStuck()) && !(xCaught() || xTrapped()));
+            boolean xWins = ((timeUp() || dStuck()) && !(xCaught() || xTrapped()));
             if (xWins) winners.add(black);
             else for (Colour c : getPlayers()) if (c != black) winners.add(c);
         }
