@@ -14,9 +14,13 @@
 		<delete dir="${build.dir}" />
 	</target>
     
+    <path id="build.path">
+        <pathelement location="lib/svgSalamander.jar" />
+    </path>
+    
 	<target name="compile">
 		<mkdir dir="${classes.dir}" />
-		<javac srcdir="${src.dir}" includeantruntime="false" destdir="${classes.dir}" />
+		<javac srcdir="${src.dir}" includeantruntime="false" destdir="${classes.dir}" classpathref="build.path" />
 	</target>
     
     <target name="compile-xlint-unchecked">
@@ -28,7 +32,9 @@
     
 	<target name="jar" depends="compile">
 		<mkdir dir="${jar.dir}"/>
-		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}" />
+		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+            <!-- <zipgroupfileset dir="${lib.dir}/svgSalamander" includes="svgSalamander.jar" /> -->
+        </jar>
 	</target>
     
     <target name="play" depends="jar">
