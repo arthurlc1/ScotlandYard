@@ -1,12 +1,18 @@
 package solution;
 
-import com.kitfox.svg.*;
+import scotlandyard.*;
 
-// Testing only for now.
-class ConsoleGame
+import javax.swing.*;
+
+public class ConsoleGame
 {
     public static void main(String[] args)
     {
-        SVGUniverse u = new SVGUniverse();
+        SwingUtilities.invokeLater((new ConsoleGame())::run);
+    }
+    
+    private void run()
+    {
+        new GameFrame().setVisible(true);
     }
 }

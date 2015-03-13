@@ -8,40 +8,37 @@
 	<property name="test_classes.dir" value="${build.dir}/tests" />
 	<property name="lib.dir" value="lib" />
 	<property name="test_main" value="TestRunner" />
-    <property name="console_main" value="ConsoleGame" />
+    <property name="console_main" value="solution.ConsoleGame" />
     
 	<target name="clean">
 		<delete dir="${build.dir}" />
 	</target>
     
-    <path id="build.path">
-        <pathelement location="lib/svgSalamander.jar" />
+    <path id="3rd-party">
+        <pathelement location="${lib.dir}/svgSalamander.jar" />
     </path>
     
 	<target name="compile">
 		<mkdir dir="${classes.dir}" />
-		<javac srcdir="${src.dir}" includeantruntime="false" destdir="${classes.dir}" classpathref="build.path" />
-	</target>
-    
-    <target name="compile-xlint-unchecked">
-		<mkdir dir="${classes.dir}" />
-		<javac srcdir="${src.dir}" includeantruntime="false" destdir="${classes.dir}">
-            <compilerarg value="-Xlint:unchecked"/>
-        </javac>
+		<javac srcdir="${src.dir}"
+               destdir="${classes.dir}"
+               includeantruntime="false"
+               classpathref="3rd-party" />
 	</target>
     
 	<target name="jar" depends="compile">
 		<mkdir dir="${jar.dir}"/>
-		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
-            <!-- <zipgroupfileset dir="${lib.dir}/svgSalamander" includes="svgSalamander.jar" /> -->
+		<jar destfile="${jar.dir}/${ant.project.name}.jar" >
+            <fileset dir="${classes.dir}" />
+            <zipfileset src="${lib.dir}/svgSalamander.jar"
+                        includes="**/*.class" />
         </jar>
 	</target>
     
     <target name="play" depends="jar">
-        <java classname="${console_main}">
+        <java classname="${console_main}" fork="true">
             <classpath>
-                <pathelement location="${classes.dir}" />
-                <path location="${jar.dir}/${ant.project.name}.jar" />
+                <pathelement location="${jar.dir}/${ant.project.name}.jar" />
             </classpath>
         </java>
     </target>
