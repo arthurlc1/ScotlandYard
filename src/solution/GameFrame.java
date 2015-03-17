@@ -2,35 +2,25 @@ package solution;
 
 import scotlandyard.*;
 
-import com.kitfox.svg.*;
-
 import javax.swing.*;
+import java.awt.*;
 
 public class GameFrame extends JFrame
 {
-    GamePanel game;
-    JScrollPane view;
     MenuPanel menu;
-    
-    SVGUniverse universe;
+    GamePanel game;
     
     public GameFrame()
     {
-        game = new GamePanel();
-        view = new JScrollPane();
         menu = new MenuPanel();
-        
-        universe = SVGCache.getSVGUniverse();
         
         this.setTitle("Scotland Yard");
         this.setDefaultCloseOperation(this.EXIT_ON_CLOSE);
         this.setLocationByPlatform(true);
-        this.setSize(800, 600);
+        this.setPreferredSize(new Dimension(800, 600));
+        this.setMinimumSize(menu.getPreferredSize());
         
-        game.setPreferredSize(getSize());
-        
-        view.add(game);
-        this.add(menu);
+        this.getContentPane().add(menu);
         pack();
     }
 }

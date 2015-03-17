@@ -2,30 +2,34 @@ package solution;
 
 import scotlandyard.*;
 
-import com.kitfox.svg.*;
-
-import java.io.*;
-import java.net.*;
 import javax.swing.*;
+import javax.swing.border.*;
+import java.awt.*;
 
-public class MenuPanel extends SVGDisplayPanel
+public class MenuPanel extends JPanel
 {
-    SVGUniverse uni;
+    JPanel buttons;
+    JButton newB;
+    JButton loadB;
+    JButton quitB;
     
     public MenuPanel()
     {
-        uni = SVGCache.getSVGUniverse();
+        buttons = new JPanel();
+        newB = new JButton("New Game");
+        loadB = new JButton("Load Game");
+        quitB = new JButton("Quit");
         
-        URL menuURL = null;
-        URI menuURI = null;
+        buttons.setLayout(new GridLayout(3, 1, 10, 10));
+        buttons.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        buttons.setPreferredSize(new Dimension(200, 150));
         
-        try
-        {
-            menuURL = new File("resources/dist/menu.svg").toURI().toURL();
-            menuURI = uni.loadSVG(menuURL);
-        }
-        catch (Exception e) { }
+        buttons.add(newB);
+        buttons.add(loadB);
+        buttons.add(quitB);
         
-        this.setDiagram(uni.getDiagram(menuURI));
+        this.setLayout(new GridBagLayout());
+        this.setPreferredSize(new Dimension(220, 190));
+        this.add(buttons, new GridBagConstraints());
     }
 }

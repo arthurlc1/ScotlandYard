@@ -14,24 +14,17 @@
 		<delete dir="${build.dir}" />
 	</target>
     
-    <path id="3rd-party">
-        <pathelement location="${lib.dir}/svgSalamander.jar" />
-    </path>
-    
 	<target name="compile">
 		<mkdir dir="${classes.dir}" />
 		<javac srcdir="${src.dir}"
                destdir="${classes.dir}"
-               includeantruntime="false"
-               classpathref="3rd-party" />
+               includeantruntime="false" />
 	</target>
     
 	<target name="jar" depends="compile">
 		<mkdir dir="${jar.dir}"/>
 		<jar destfile="${jar.dir}/${ant.project.name}.jar" >
             <fileset dir="${classes.dir}" />
-            <zipfileset src="${lib.dir}/svgSalamander.jar"
-                        includes="**/*.class" />
         </jar>
 	</target>
     

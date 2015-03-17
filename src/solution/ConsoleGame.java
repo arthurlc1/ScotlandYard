@@ -8,10 +8,11 @@ public class ConsoleGame
 {
     public static void main(String[] args)
     {
-        SwingUtilities.invokeLater((new ConsoleGame())::run);
+        ConsoleGame game = new ConsoleGame();
+        SwingUtilities.invokeLater(game::run);
     }
     
-    private void run()
+    public void run()
     {
         new GameFrame().setVisible(true);
     }
