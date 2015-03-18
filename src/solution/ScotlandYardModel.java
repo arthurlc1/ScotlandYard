@@ -283,4 +283,20 @@ public class ScotlandYardModel extends ScotlandYard
         }
         return winners;
     }
+    
+    public static ScotlandYardModel defaultGame(int n) throws IOException
+    {
+        List<Boolean> r = new ArrayList<Boolean>();
+        for (int i=0; i<3; i++) r.add(false);
+        r.add(true);
+        for (int i=0; i<4; i++) r.add(false);
+        r.add(true);
+        for (int i=0; i<4; i++) r.add(false);
+        r.add(true);
+        for (int i=0; i<4; i++) r.add(false);
+        r.add(true);
+        for (int i=0; i<5; i++) r.add(false);
+        r.add(true);
+        return new ScotlandYardModel(n, r, "resources/dist/graph.txt");
+    }
 }
