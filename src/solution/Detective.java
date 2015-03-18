@@ -16,4 +16,9 @@ public class Detective extends Piece
         play(move);
         recipient.giveTicket(move.ticket);
     }
+    
+    public static Detective getDefault(Player p, Colour c, int l)
+    {
+        return new Detective(p, c, l, Piece.getMap(11, 8, 4, 0, 0));
+    }
 }

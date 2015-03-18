@@ -29,4 +29,15 @@ public abstract class Piece
         location = move.target;
         tickets.replace(move.ticket, tickets.get(move.ticket) - 1);
     }
+    
+    public static Map<Ticket,Integer> getMap(int t, int b, int u, int d, int s)
+    {
+        Map<Ticket,Integer> tickets = new HashMap<Ticket,Integer>();
+        tickets.put(Ticket.Taxi,        t);
+        tickets.put(Ticket.Bus,         b);
+        tickets.put(Ticket.Underground, u);
+        tickets.put(Ticket.DoubleMove,  d);
+        tickets.put(Ticket.SecretMove,  s);
+        return tickets;
+    }
 }
