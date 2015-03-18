@@ -14,6 +14,6 @@ public class ConsoleGame
     
     public void run()
     {
-        new GameFrame().setVisible(true);
+        GameFrame w = new GameFrame();
     }
 }

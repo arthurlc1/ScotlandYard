@@ -7,20 +7,24 @@ import java.awt.*;
 
 public class GameFrame extends JFrame
 {
-    MenuPanel menu;
-    GamePanel game;
-    
     public GameFrame()
     {
-        menu = new MenuPanel();
-        
         this.setTitle("Scotland Yard");
         this.setDefaultCloseOperation(this.EXIT_ON_CLOSE);
         this.setLocationByPlatform(true);
         this.setPreferredSize(new Dimension(800, 600));
-        this.setMinimumSize(menu.getPreferredSize());
         
-        this.getContentPane().add(menu);
-        pack();
+        this.setScreen(new MainMenuPanel());
+        
+        this.setVisible(true);
+    }
+    
+    public void setScreen(JPanel p)
+    {
+        this.setMinimumSize(p.getPreferredSize());
+        this.setPreferredSize(p.getPreferredSize());
+        this.getContentPane().removeAll();
+        this.getContentPane().add(p);
+        this.pack();
     }
 }

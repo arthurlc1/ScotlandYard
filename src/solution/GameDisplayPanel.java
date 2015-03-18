@@ -4,7 +4,7 @@ import scotlandyard.*;
 
 import javax.swing.*;
 
-public class GamePanel extends JPanel
+public class GameDisplayPanel extends JPanel
 {
     
 }
