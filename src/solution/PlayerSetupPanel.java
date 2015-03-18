@@ -78,12 +78,12 @@ public class PlayerSetupPanel extends JPanel implements ActionListener
         imgLabel.revalidate();
     }
     
-    public PlayerType getPlayerType()
+    public PlayerType pt()
     {
         return pt;
     }
     
-    public Colour getColour()
+    public Colour colour()
     {
         return colour;
     }

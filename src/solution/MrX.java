@@ -30,8 +30,8 @@ public class MrX extends Piece
         if (reveal) lastSeen = location;
     }
     
-    public static MrX getDefault(Player p, Colour c, int l)
+    public static Map<Ticket,Integer> getMap()
     {
-        return new MrX(p, c, l, false, Piece.getMap(4, 3, 3, 2, 5));
+        return Piece.getMap(4, 3, 3, 2, 5);
     }
 }

@@ -2,9 +2,14 @@ package solution;
 
 import scotlandyard.*;
 
+import java.util.*;
+
 import javax.swing.*;
 import javax.swing.border.*;
-import java.awt.*;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+import java.awt.Dimension;
 import java.awt.event.*;
 
 public class NewGamePanel extends JPanel implements ActionListener
@@ -71,7 +76,13 @@ public class NewGamePanel extends JPanel implements ActionListener
     
     public void startGame()
     {
+        List<Colour> colours = new ArrayList<Colour>();
+        for (PlayerSetupPanel p : players)
+        {
+            if (p.pt() != PlayerSetupPanel.PlayerType.Off) colours.add(p.colour());
+        }
         GameFrame w = (GameFrame) SwingUtilities.getWindowAncestor(this);
+        w.setScreen(new ScotlandYardDisplay(colours));
     }
     
     public void actionPerformed(ActionEvent e)

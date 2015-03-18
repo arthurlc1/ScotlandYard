@@ -17,8 +17,8 @@ public class Detective extends Piece
         recipient.giveTicket(move.ticket);
     }
     
-    public static Detective getDefault(Player p, Colour c, int l)
+    public static Map<Ticket,Integer> getMap()
     {
-        return new Detective(p, c, l, Piece.getMap(11, 8, 4, 0, 0));
+        return Piece.getMap(11, 8, 4, 0, 0);
     }
 }
