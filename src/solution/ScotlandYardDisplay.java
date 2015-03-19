@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.Dimension;
+import java.awt.Color;
 import java.awt.event.*;
 
 public class ScotlandYardDisplay extends JPanel
@@ -24,7 +25,7 @@ public class ScotlandYardDisplay extends JPanel
         init(control);
     }
     
-    // Initialise SYC from existing model, for loading saved game.
+    // Initialise SYC from save file.
     public ScotlandYardDisplay(File saveFile)
     {
         ScotlandYardControl control = new ScotlandYardControl(saveFile);
@@ -45,6 +46,8 @@ public class ScotlandYardDisplay extends JPanel
         cGame.weightx = 1.0;
         cGame.weighty = 0.5;
         cGame.insets = new Insets(5, 5, 5, 5);
+        cGame.fill = GridBagConstraints.BOTH;
+        if (ConsoleGame.testing) game.setBackground(Color.RED);
         this.add(game, cGame);
         
         GridBagConstraints cCtrl = new GridBagConstraints();
@@ -53,6 +56,9 @@ public class ScotlandYardDisplay extends JPanel
         cCtrl.weightx = 0.0;
         cCtrl.weighty = 0.5;
         cCtrl.insets = new Insets(5, 5, 5, 5);
+        cCtrl.fill = GridBagConstraints.VERTICAL;
         this.add(ctrl, cCtrl);
+        
+        this.setPreferredSize(new Dimension(1000,600));
     }
 }
