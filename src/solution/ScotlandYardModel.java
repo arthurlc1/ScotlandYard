@@ -43,12 +43,18 @@ public class ScotlandYardModel extends ScotlandYard
     @Override
     public boolean join(Player player, Colour colour, int location, Map<Ticket, Integer> tickets)
     {
+        return join(player, colour, location, tickets, null);
+    }
+    
+    public boolean join(Player player, Colour colour, int location, Map<Ticket, Integer> tickets, GameHistory history)
+    {
         for (Piece p : pieces) if (p.colour == colour) return false;
         Piece newPiece;
         if (colour == black)
         {
             newPiece = new MrX(player, colour, location, rounds.get(0), tickets);
             pieces.add(0, newPiece);
+            if (history != null) history.pieces.add(0, newPiece);
             mrX = (MrX) pieces.get(0);
         }
         else
@@ -56,6 +62,7 @@ public class ScotlandYardModel extends ScotlandYard
             if (pieces.size() == numPlayers - (mrX == null ? 1 : 0)) return false;
             newPiece = new Detective(player, colour, location, tickets);
             pieces.add(newPiece);
+            if (history != null) history.pieces.add(newPiece);
         }
         return true;
     }

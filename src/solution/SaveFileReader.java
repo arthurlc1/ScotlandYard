@@ -6,7 +6,7 @@ import scotlandyard.*;
 
 public class SaveFileReader {
 	
-	public static ScotlandYardModel read(String fileName) throws FileNotFoundException
+	public static GameHistory read(String fileName) throws FileNotFoundException
 	{
 		File file = new File(fileName);
 		Scanner scanner = new Scanner(file);
@@ -26,9 +26,9 @@ public class SaveFileReader {
 				int number = Integer.parseInt(line[i]);
 				map.put(ticket, number);
 			}
-		ScotlandYardModel.join
+		//ScotlandYardModel.join
 		map.clear();
 		}
+        return null;
 	}
-    
 }

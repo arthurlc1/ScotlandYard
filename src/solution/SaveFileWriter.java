@@ -8,24 +8,22 @@ import scotlandyard.*;
 public class SaveFileWriter {
 
 	
-	public static void write(String fileName, ScotlandYardModel model)
+	public static void write(String fileName, GameHistory history) throws IOException
 	{
 		File file = new File(fileName);
 		PrintWriter writer = new PrintWriter(file, "UTF-8");
 		
-		writer.print(ScotlandYardModel.getCurrentPlayer());
+		//writer.print(model.getCurrentPlayer());
 		for (Colour colour : Colour.values())
 		{	
-			if (ScotlandYardModel.getPiece(colour) == null) return null;
-			else
-			{
+			//if (model.getPiece(colour) == null) return;
+			//else
+			//{
 				writer.print("\n");
-				writer.print(colour + " " + ScotlandYardModel.getPlayerLocation(colour));
-				for (Ticket ticket : Ticket.values())
-				writer.print( ScotlandYardModel.getPlayerTickets(colour, ticket) + " ");
-			}
+				//writer.print(colour + " " + model.getPlayerLocation(colour));
+				//for (Ticket ticket : Ticket.values())
+				//writer.print( model.getPlayerTickets(colour, ticket) + " ");
+			//}
 		}
-		return File;
-	
 	}
 }

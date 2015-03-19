@@ -15,10 +15,14 @@ public class ScotlandYardControl implements Player, Spectator, ActionListener
     private ScotlandYardModel model;
     private ScotlandYardDisplay display;
     
+    private GameHistory history;
+    
     public ScotlandYardControl(List<Colour> colours)
     {
         try { model = ScotlandYardModel.defaultGame(colours.size()); }
         catch (IOException e) { }
+        history = new GameHistory(model);
+        
         List<Integer> starts = Arrays.asList(11, 22, 33, 44, 55, 66, 77, 88);
         starts = new ArrayList<Integer>(starts);
         Random r = new Random();
@@ -27,7 +31,7 @@ public class ScotlandYardControl implements Player, Spectator, ActionListener
             int s = starts.get(r.nextInt(starts.size()));
             starts.remove(starts.indexOf(s));
             Map<Ticket,Integer> t = (c == black ? MrX.getMap() : Detective.getMap());
-            model.join(this, c, s, t);
+            if (model.join(this, c, s, t)) history.join(c, s, t);
         }
         init();
     }

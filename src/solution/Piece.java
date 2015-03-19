@@ -8,7 +8,7 @@ public abstract class Piece
 {
     public final Player player;
     public final Colour colour;
-    int location;
+    private int location;
     public final Map<Ticket,Integer> tickets;
 
     public Piece(Player player, Colour colour, int location, Map<Ticket,Integer> tickets)
