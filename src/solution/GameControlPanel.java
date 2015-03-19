@@ -10,4 +10,11 @@ public class GameControlPanel extends JPanel
     private JPanel tickets;
     private JPanel move;
     private JButton play;
+    
+    public GameControlPanel()
+    {
+        toMove = new JLabel("Mr. X to move:");
+        
+        this.add(toMove);
+    }
 }
