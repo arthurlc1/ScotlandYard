@@ -6,9 +6,9 @@ import scotlandyard.*;
 
 public class SaveFileReader {
 	
-	void read(String filename) throws FileNotFoundException
+	public static ScotlandYardModel read(String fileName) throws FileNotFoundException
 	{
-		File file = new File(filename);
+		File file = new File(fileName);
 		Scanner scanner = new Scanner(file);
 		Map<Ticket, Integer> map = new HashMap<Ticket, Integer>();
     

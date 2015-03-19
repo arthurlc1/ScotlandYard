@@ -8,10 +8,10 @@ import scotlandyard.*;
 public class SaveFileWriter {
 
 	
-	public File Writer(String Filename)
+	public static void write(String fileName, ScotlandYardModel model)
 	{
-		File File = new File(Filename);
-		PrintWriter writer = new PrintWriter(Filename, "UTF-8");
+		File file = new File(fileName);
+		PrintWriter writer = new PrintWriter(file, "UTF-8");
 		
 		writer.print(ScotlandYardModel.getCurrentPlayer());
 		for (Colour colour : Colour.values())
