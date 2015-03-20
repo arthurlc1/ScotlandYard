@@ -8,7 +8,7 @@ import java.io.*;
 import javax.swing.*;
 import java.awt.event.*;
 
-public class ScotlandYardControl implements Player, Spectator, ActionListener
+public class ScotlandYardControl implements Player, Spectator, ActionListener, MouseListener
 {
     private final static Colour black = Colour.Black;
     
@@ -55,6 +55,17 @@ public class ScotlandYardControl implements Player, Spectator, ActionListener
     {
         
     }
+    
+    @Override
+    public void mouseClicked(MouseEvent e)
+    {
+        
+    }
+    public void mouseEntered(MouseEvent e) { }
+    public void mouseExited(MouseEvent e) { }
+    public void mouseMoved(MouseEvent e) { }
+    public void mousePressed(MouseEvent e) { }
+    public void mouseReleased(MouseEvent e) { }
     
     public void actionPerformed(ActionEvent e)
     {
