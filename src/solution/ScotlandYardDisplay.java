@@ -47,7 +47,6 @@ public class ScotlandYardDisplay extends JPanel
         cGame.weighty = 0.5;
         cGame.insets = new Insets(5, 5, 5, 5);
         cGame.fill = GridBagConstraints.BOTH;
-        if (ConsoleGame.testing) game.setBackground(Color.RED);
         this.add(game, cGame);
         
         GridBagConstraints cCtrl = new GridBagConstraints();

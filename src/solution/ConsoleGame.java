@@ -6,7 +6,7 @@ import javax.swing.*;
 
 public class ConsoleGame
 {
-    public final static boolean testing = false;
+    public static boolean testing = true;
     
     public static void main(String[] args)
     {
