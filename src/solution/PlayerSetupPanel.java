@@ -17,7 +17,7 @@ public class PlayerSetupPanel extends JPanel implements ActionListener
     private String name;
     
     private ImageIcon imgIcon;
-    private static ImageIcon nullIcon = new ImageIcon("resources/dist/null-lo.png");
+    private static ImageIcon nullIcon = new ImageIcon(Resources.get("null-lo"));
     private JLabel imgLabel;
     
     private PlayerType pt;
@@ -29,13 +29,13 @@ public class PlayerSetupPanel extends JPanel implements ActionListener
         if (i == 0)
         {
             name = "Mr. X";
-            imgIcon = new ImageIcon("resources/dist/mr-x-lo.png");
+            imgIcon = new ImageIcon(Resources.get("mr-x-lo"));
         }
         else
         {
             name = "Detective " + i;
-            String[] cs = {"b","g","r","w","y",};
-            imgIcon = new ImageIcon("resources/dist/det-" + cs[i-1] + "-lo.png");
+            String[] cs = {"b","g","r","w","y"};
+            imgIcon = new ImageIcon(Resources.get("det-" + cs[i-1] + "-lo"));
         }
         
         pt = PlayerType.Player;

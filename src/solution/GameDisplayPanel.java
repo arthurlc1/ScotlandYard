@@ -4,6 +4,8 @@ import scotlandyard.*;
 
 import java.io.*;
 import java.util.Scanner;
+import java.util.Map;
+import java.util.HashMap;
 
 import javax.swing.*;
 import javax.imageio.*;
@@ -14,10 +16,10 @@ import java.awt.image.*;
 
 /**
  * TODO:
- *      - Fix zoom such that the origin of the transform is always the mouse.
+ *      - Fix issue where view jerks as zoom reaches maximum / minimum.
  */
 
-public class GameDisplayPanel extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener
+public class GameDisplayPanel extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener
 {
     private final static RenderingHints textRenderHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
     private final static RenderingHints imageRenderHints = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -26,10 +28,12 @@ public class GameDisplayPanel extends JPanel implements MouseListener, MouseMoti
     private static BufferedImage bg;
     private static BufferedImage[] imgS = new BufferedImage[3];
     private static BufferedImage[] imgH = new BufferedImage[3];
+    private Map<Colour,BufferedImage> imgP;
     
     private Point[] ls;
     private int[] stations;
     private int[] highlights;
+    private Map<Colour,Integer> locMap;
     
     private AffineTransform mv;
     private AffineTransform imv;
@@ -45,59 +49,67 @@ public class GameDisplayPanel extends JPanel implements MouseListener, MouseMoti
     private int MIN_Y;
     private int MAX_Y;
     
-    private double z;
-    
+    private double z;   // zoom level
     private Point s;    // image size vector
     private Point w;    // window size vector
-    
     private Point o0;   // origin at start of drag
     private Point m0;   // mouse position at start of drag
-    
     private Point o;    // latest origin
     private Point m;    // latest mouse position
     
-    private boolean dragging;
-    private boolean zooming;
+    private boolean dragging = false;
+    private boolean zooming = false;
     
-    public GameDisplayPanel()
+    private JMenu menu;
+    private JMenuItem save;
+    private JMenuItem load;
+    private JMenuItem quit;
+    
+    private TicketPanel ticketP;
+    
+    public GameDisplayPanel(Map<Colour,Integer> locMap)
     {
-        z = 1.0;
+        z = 0.5;
         o = new Point();
         m = new Point();
         this.updateTransforms();
         
-        this.getImages();
-        
         ls = new Point[199];
         stations = new int[199];
         highlights = new int[199];
+        this.locMap = locMap;
         
-        try { this.getNodes(); }
-        catch(FileNotFoundException e) { }
-        
-        dragging = false;
-        
-        this.setBackground(Color.RED);
+        getImages();
+        try { getNodes(); }
+        catch(FileNotFoundException e) { System.err.println("nodes not found."); }
         
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
         this.addMouseWheelListener(this);
+        
+        menu = new JMenu("Menu");
+        save = new JMenuItem("Save");
+        load = new JMenuItem("Load");
+        quit = new JMenuItem("Quit");
     }
     
     public void getImages()
     {
-        try
-        {
-            bg = ImageIO.read(new File("resources/dist/background.png"));
-            imgS[0] = ImageIO.read(new File("resources/dist/s-taxi.png"));
-            imgS[1] = ImageIO.read(new File("resources/dist/s-bus.png"));
-            imgS[2] = ImageIO.read(new File("resources/dist/s-tube.png"));
-            imgH[0] = null;
-            imgH[1] = ImageIO.read(new File("resources/dist/h-1.png"));
-            imgH[2] = ImageIO.read(new File("resources/dist/h-2.png"));
-        }
-        catch (IOException e) { System.err.println("image(s) not found."); }
+        bg = Resources.get("background");
         s = new Point(bg.getWidth(), bg.getHeight());
+        imgS[0] = Resources.get("s-taxi");
+        imgS[1] = Resources.get("s-bus");
+        imgS[2] = Resources.get("s-tube");
+        imgH[0] = null;
+        imgH[1] = Resources.get("h-1");
+        imgH[2] = Resources.get("h-2");
+        imgP = new HashMap<Colour,BufferedImage>();
+        imgP.put(Colour.Black,  Resources.get("mr-x-lo"));
+        imgP.put(Colour.Blue,   Resources.get("det-b-lo"));
+        imgP.put(Colour.Green,  Resources.get("det-g-lo"));
+        imgP.put(Colour.Red,    Resources.get("det-r-lo"));
+        imgP.put(Colour.White,  Resources.get("det-w-lo"));
+        imgP.put(Colour.Yellow, Resources.get("det-y-lo"));
     }
     
     public void getNodes() throws FileNotFoundException
@@ -111,7 +123,7 @@ public class GameDisplayPanel extends JPanel implements MouseListener, MouseMoti
             int y = Integer.parseInt(args[2]);
             ls[i] = new Point(x, y);
             stations[i] = Integer.parseInt(args[3]);
-            stations[i] = 0;
+            highlights[i] = 0;
         }
     }
     
@@ -129,23 +141,31 @@ public class GameDisplayPanel extends JPanel implements MouseListener, MouseMoti
         catch(NoninvertibleTransformException e) { }
         
         sc_mv = new AffineTransform();
-        sc_mv.concatenate(sc);
         sc_mv.concatenate(mv);
+        sc_mv.concatenate(sc);
         imv_isc = new AffineTransform();
-        imv_isc.concatenate(imv);
         imv_isc.concatenate(isc);
-        
+        imv_isc.concatenate(imv);
+    }
+    
+    public AffineTransform sc_mv_o(Point centre, Point offset)
+    {
+        AffineTransform out = new AffineTransform();
+        out.concatenate(sc_mv);
+        out.translate(offset.x, offset.y);
+        out.translate(centre.x, centre.y);
+        return out;
     }
     
     public void updateLimits()
     {
         w = new Point(getWidth(), getHeight());
         MIN_Z = Math.max((double)w.x / (double)s.x, (double)w.y / (double)s.y);
-        MIN_Z = Math.ceil(MIN_Z * 10) / 10;
-        MAX_Z = 1.2;
-        MIN_X = Math.round(w.x / (float)z) - s.x;
+        MIN_Z = Math.ceil(MIN_Z * 10 + 1) / 10;
+        MAX_Z = 0.8;
+        MIN_X = w.x - Math.round(s.x * (float)z);
         MAX_X = 0;
-        MIN_Y = Math.round(w.y / (float)z) - s.y;
+        MIN_Y = w.y - Math.round(s.y * (float)z);
         MAX_Y = 0;
     }
     
@@ -169,9 +189,27 @@ public class GameDisplayPanel extends JPanel implements MouseListener, MouseMoti
         g2d.setRenderingHints(textRenderHints);
         g2d.setRenderingHints(imageRenderHints);
         g2d.setRenderingHints(renderHints);
-        
         g2d.drawImage(bg, sc_mv, this);
+        for (int i=0; i<199; i++)
+        {
+            Point highlight_o = new Point(-100, -100);
+            g2d.drawImage(imgH[highlights[i]], sc_mv_o(ls[i], highlight_o), this);
+            Point station_o = new Point(-50, -40);
+            g2d.drawImage(imgS[stations[i]], sc_mv_o(ls[i], station_o), this);
+        }
+        for (Colour c : locMap.keySet())
+        {
+            Point piece_o = new Point(-50, -150);
+            g2d.drawImage(imgP.get(c), sc_mv_o(ls[locMap.get(c)], piece_o), this);
+        }
         g2d.dispose();
+    }
+    
+    public boolean mouseOver(int i)
+    {
+        boolean inXrange = (ls[i].x - 40 < m.x) && (m.x < ls[i].x + 40);
+        boolean inYrange = (ls[i].y - 40 < m.y) && (m.y < ls[i].y + 40);
+        return inXrange && inYrange;
     }
     
     public void mouseClicked(MouseEvent e) { }
@@ -187,7 +225,23 @@ public class GameDisplayPanel extends JPanel implements MouseListener, MouseMoti
     }
     public void mouseEntered(MouseEvent e) { }
     public void mouseExited(MouseEvent e) { }
-    public void mouseMoved(MouseEvent e) { }
+    public void mouseMoved(MouseEvent e)
+    {
+        imv_isc.transform(e.getPoint(), m);
+        for (int i=0; i<199; i++)
+        {
+            if (mouseOver(i) && highlights[i] == 1)
+            {
+                highlights[i] = 2;
+                repaint();
+            }
+            else if (!mouseOver(i) && highlights[i] == 2)
+            {
+                highlights[i] = 1;
+                repaint();
+            }
+        }
+    }
     public void mousePressed(MouseEvent e)
     {
         isc.transform(e.getPoint(), m);
@@ -202,12 +256,18 @@ public class GameDisplayPanel extends JPanel implements MouseListener, MouseMoti
         imv_isc.transform(e.getPoint(), m);
         float dz = -0.1f * (float) e.getPreciseWheelRotation();
         z += dz;
-        if (MIN_Z < z && z < MAX_Z)
+        if (MIN_Z <= z && z <= MAX_Z)
         {
             o.x -= Math.round(m.x * dz);
             o.y -= Math.round(m.y * dz);
         }
         this.repaint();
         zooming = false;
+        System.err.println("new Z: " + z);
+    }
+    
+    public void actionPerformed(ActionEvent e)
+    {
+        
     }
 }

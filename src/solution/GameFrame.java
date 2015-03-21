@@ -16,8 +16,8 @@ public class GameFrame extends JFrame
         this.setLocationByPlatform(true);
         this.setPreferredSize(new Dimension(800, 600));
         
-        //this.setScreen(new MainMenuPanel());
-        this.setScreen(new ScotlandYardDisplay(Arrays.asList(Colour.class.getEnumConstants())));
+        this.setScreen(new MainMenuPanel());
+        //this.setScreen(new ScotlandYardDisplay(Arrays.asList(Colour.class.getEnumConstants())));
         
         this.setVisible(true);
     }

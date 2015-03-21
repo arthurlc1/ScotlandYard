@@ -35,7 +35,7 @@ public class ScotlandYardDisplay extends JPanel
     // Initialise display components.
     public void init(ScotlandYardControl control)
     {
-        game = new GameDisplayPanel();
+        game = new GameDisplayPanel(control.getLocMap());
         ctrl = new GameControlPanel();
         
         this.setLayout(new GridBagLayout());

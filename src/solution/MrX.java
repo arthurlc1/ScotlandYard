@@ -27,7 +27,7 @@ public class MrX extends Piece
     public void play(MoveTicket move, boolean reveal)
     {
         play(move);
-        if (reveal) lastSeen = location;
+        if (reveal) lastSeen = find();
     }
     
     public static Map<Ticket,Integer> getMap()

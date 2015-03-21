@@ -10,6 +10,8 @@ public class ConsoleGame
     {
         ConsoleGame game = new ConsoleGame();
         SwingUtilities.invokeLater(game::run);
+        
+        new Thread(Resources::load).start();
     }
     
     public void run()
