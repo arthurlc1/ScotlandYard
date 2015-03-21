@@ -9,6 +9,7 @@ public class GameHistory implements Spectator
 {
     public final List<Piece> pieces;
     public final List<Move> moves;
+	
     
     public GameHistory(ScotlandYardModel model)
     {
