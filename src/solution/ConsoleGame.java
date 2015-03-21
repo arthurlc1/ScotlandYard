@@ -8,10 +8,11 @@ public class ConsoleGame
 {
     public static void main(String[] args)
     {
+        Resources resources = new Resources();
+        new Thread(resources::load).start();
+        
         ConsoleGame game = new ConsoleGame();
         SwingUtilities.invokeLater(game::run);
-        
-        new Thread(Resources::load).start();
     }
     
     public void run()

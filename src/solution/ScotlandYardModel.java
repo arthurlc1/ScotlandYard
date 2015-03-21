@@ -290,4 +290,18 @@ public class ScotlandYardModel extends ScotlandYard
         }
         return winners;
     }
+    
+    public static ScotlandYardModel defaultGame(int n) throws IOException
+    {
+        List<Boolean> r = str2bools("0001000010000100001000001");
+        int numD = n - 1;
+        return new ScotlandYardModel(numD, r, "resources/dist/graph.txt");
+    }
+    
+    private static List<Boolean> str2bools(String str)
+    {
+        List<Boolean> out = new ArrayList<Boolean>();
+        for (char c : str.toCharArray()) out.add(c == '1');
+        return out;
+    }
 }

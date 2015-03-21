@@ -5,7 +5,9 @@ import scotlandyard.*;
 import java.io.*;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.concurrent.*;
 
+import java.awt.*;
 import java.awt.image.*;
 import javax.imageio.*;
 
@@ -20,12 +22,13 @@ public class Resources
         "det-w-lo",
         "det-y-lo",
         "null-lo",
-        "background",
+        "background-lo",
         "s-taxi",
         "s-bus",
         "s-tube",
         "h-1",
         "h-2",
+        "menu",
         "t-taxi-lo",
         "t-bus-lo",
         "t-tube-lo",
@@ -37,9 +40,18 @@ public class Resources
         "t-secret-d",
         "t-double-d"
     };
-    private static final Map<String,BufferedImage> images = new HashMap<String,BufferedImage>();
+    private static Map<String,BufferedImage> images;
+    private static Map<String,CountDownLatch> locks;
     
-    public static void load()
+    public Resources()
+    {
+        images = new HashMap<String,BufferedImage>();
+        locks = new HashMap<String,CountDownLatch>();
+        for (String s : names) locks.put(s, new CountDownLatch(1));
+        locks.put("background-re", new CountDownLatch(1));
+    }
+    
+    public void load()
     {
         for (String s : names)
         {
@@ -50,15 +62,22 @@ public class Resources
                 images.put(s, img);
             }
             catch (IOException e) { System.err.println(s + ".png not found."); }
+            locks.get(s).countDown();
         }
+        Image tmp = images.get("background-lo").getScaledInstance(5625, 4655, Image.SCALE_SMOOTH);
+        BufferedImage dimg = new BufferedImage(5625, 4655, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = dimg.createGraphics();
+        g2d.drawImage(tmp, 0, 0, null);
+        g2d.dispose();
+        images.put("background-re", dimg);
+        locks.get("background-re").countDown();
         System.err.println("Done!");
     }
     
     public static BufferedImage get(String s)
     {
-        BufferedImage img;
-        do img = images.get(s);
-        while (img == null);
-        return img;
+        try { locks.get(s).await(); }
+        catch (InterruptedException e) { }
+        return images.get(s);
     }
 }
