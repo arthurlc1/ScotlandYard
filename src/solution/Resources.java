@@ -16,6 +16,7 @@ public class Resources
     private static final String[] names = 
     {
         "mr-x-lo",
+        "mr-x-last",
         "det-b-lo",
         "det-g-lo",
         "det-r-lo",

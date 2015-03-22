@@ -21,52 +21,43 @@ import java.awt.image.*;
 
 public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener
 {
-    private ScotlandYardControl control;
+    private final static Colour black = Colour.Black;
+    
+    private int[] tickets;
+    private boolean[] usable;
     
     private final static RenderingHints textRenderHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
     private final static RenderingHints imageRenderHints = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     private final static RenderingHints renderHints = new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
     
     private static BufferedImage bg;
+    
+    private Point[] ls = new Point[199];
+    private int[] stations = new int[199];
     private static BufferedImage[] imgS = new BufferedImage[3];
+    private int[] highlights = new int[199];
     private static BufferedImage[] imgH = new BufferedImage[3];
-    private Map<Colour,BufferedImage> imgP;
     
-    private Point[] ls;
-    private int[] stations;
-    private int[] highlights;
     private Map<Colour,Integer> locMap;
+    private Map<Colour,BufferedImage> imgP;
+    private int locX;
+    private BufferedImage imgX;
+    private boolean xTurn = false;
     
-    private AffineTransform mv;
-    private AffineTransform imv;
-    private AffineTransform sc;
-    private AffineTransform isc;
-    private AffineTransform sc_mv;
-    private AffineTransform imv_isc;
+    private AffineTransform mv, imv, sc, isc, sc_mv, imv_isc;
     
-    private double MIN_Z;
-    private double MAX_Z;
-    private int MIN_X;
-    private int MAX_X;
-    private int MIN_Y;
-    private int MAX_Y;
+    private double MIN_Z, MAX_Z;
+    private int MIN_X, MAX_X, MIN_Y, MAX_Y;
     
-    private double z;   // zoom level
-    private Point s;    // image size vector
-    private Point w;    // window size vector
-    private Point o0;   // origin at start of drag
-    private Point m0;   // mouse position at start of drag
-    private Point o;    // latest origin
-    private Point m;    // latest mouse position
+    private double z;
+    private Point s, w, o0, m0, o, m;
     
     private boolean dragging = false;
     private boolean zooming = false;
     
     private JButton menuB;
     private JPopupMenu menu;
-    private JMenuItem save;
-    private JMenuItem load;
-    private JMenuItem quit;
+    private JMenuItem save, load, quit;
     
     private TicketPanel ticketP;
     private JPopupMenu ticketM;
@@ -74,57 +65,37 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
     // Initialise SYC from list of colours, for new game.
     public ScotlandYardDisplay(java.util.List<Colour> colours)
     {
-        control = new ScotlandYardControl(colours);
-        init(control);
+        new ScotlandYardControl(colours).addDisplay(this);
     }
     
     // Initialise SYC from save file.
-    public ScotlandYardDisplay(File saveFile)
+    public ScotlandYardDisplay(GameHistory history)
     {
-        control = new ScotlandYardControl(saveFile);
-        init(control);
+        new ScotlandYardControl(history).addDisplay(this);
     }
     
-    public void init(ScotlandYardControl control)
+    public void init(Map<Colour,Integer> locMap, int locX)
     {
-        this.control = control;
-        
-        this.setPreferredSize(new Dimension(1000,600));
+        this.setPreferredSize(new Dimension(1200,700));
         this.setOpaque(false);
         this.setLayout(null);
+        
+        tickets = new int[] {11, 8, 5, 5, 2};
+        usable = new boolean[] {true, true, true, true, true};
+        this.locMap = locMap;
+        this.locX = locX;
         
         z = 0.5;
         o = new Point();
         m = new Point();
-        this.updateTransforms();
-        
-        ls = new Point[199];
-        stations = new int[199];
-        highlights = new int[199];
-        this.locMap = control.getLocMap();
-        
+        try { updateTransforms(); } catch (Exception e) { }
         getImages();
-        try { getNodes(); }
-        catch(FileNotFoundException e) { System.err.println("nodes not found."); }
+        try { getNodes(); } catch(FileNotFoundException e) { }
+        makeMenu();
         
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
         this.addMouseWheelListener(this);
-        
-        menuB = new JButton(new ImageIcon(Resources.get("menu")));
-        menu = new JPopupMenu();
-        save = new JMenuItem("Save");
-        load = new JMenuItem("Load");
-        quit = new JMenuItem("Quit");
-        menu.add(save);
-        menu.add(load);
-        menu.add(quit);
-        this.add(menuB);
-        Insets insets = this.getInsets();
-        Dimension size = menuB.getPreferredSize();
-        menuB.setBounds(5, 5, size.width - 3, size.height);
-        menuB.setActionCommand("menu");
-        menuB.addActionListener(this);
     }
     
     public void getImages()
@@ -138,12 +109,13 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
         imgH[1] = Resources.get("h-1");
         imgH[2] = Resources.get("h-2");
         imgP = new HashMap<Colour,BufferedImage>();
-        imgP.put(Colour.Black,  Resources.get("mr-x-lo"));
+        imgP.put(Colour.Black,  Resources.get("mr-x-last"));
         imgP.put(Colour.Blue,   Resources.get("det-b-lo"));
         imgP.put(Colour.Green,  Resources.get("det-g-lo"));
         imgP.put(Colour.Red,    Resources.get("det-r-lo"));
         imgP.put(Colour.White,  Resources.get("det-w-lo"));
         imgP.put(Colour.Yellow, Resources.get("det-y-lo"));
+        imgX = Resources.get("mr-x-lo");
     }
     
     public void getNodes() throws FileNotFoundException
@@ -161,19 +133,54 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
         }
     }
     
-    public void updateTransforms()
+    public void makeMenu()
+    {
+        menuB = new JButton(new ImageIcon(Resources.get("menu")));
+        menu = new JPopupMenu();
+        save = new JMenuItem("Save");
+        load = new JMenuItem("Load");
+        quit = new JMenuItem("Quit");
+        menu.add(save);
+        menu.add(load);
+        menu.add(quit);
+        this.add(menuB);
+        Dimension size = menuB.getPreferredSize();
+        menuB.setBounds(5, 5, size.width - 3, size.height);
+        menuB.setActionCommand("menu");
+        menuB.addActionListener(this);
+    }
+    
+    public void updateTargets(boolean[] ts)
+    {
+        for (int i=0; i<ts.length; i++) highlights[i] = ts[i] ? 1 : 0;
+    }
+    
+    public void setxTurn(boolean xTurn)
+    {
+        this.xTurn = xTurn;
+        repaint();
+    }
+    
+    public void play(Colour c, int target)
+    {
+        play(c, target, false);
+    }
+    
+    public void play(Colour c, int target, boolean xReveal)
+    {
+        if (c == black)            locX = target;
+        if (c != black || xReveal) locMap.put(c,target);
+        repaint();
+    }
+    
+    public void updateTransforms() throws NoninvertibleTransformException
     {
         sc = new AffineTransform();
         sc.scale(z, z);
+        isc = sc.createInverse();
         mv = new AffineTransform();
         mv.translate(o.x, o.y);
-        try
-        {
-            isc = sc.createInverse();
-            imv = mv.createInverse();
-        }
-        catch(NoninvertibleTransformException e) { }
-        
+        imv = mv.createInverse();
         sc_mv = new AffineTransform();
         sc_mv.concatenate(mv);
         sc_mv.concatenate(sc);
@@ -182,11 +189,11 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
         imv_isc.concatenate(imv);
     }
     
-    public AffineTransform sc_mv_o(Point centre, Point offset)
+    public AffineTransform sc_mv_o(Point centre, int oX, int oY)
     {
         AffineTransform out = new AffineTransform();
         out.concatenate(sc_mv);
-        out.translate(offset.x, offset.y);
+        out.translate(oX, oY);
         out.translate(centre.x, centre.y);
         return out;
     }
@@ -195,8 +202,8 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
     {
         w = new Point(getWidth(), getHeight());
         MIN_Z = Math.max((double)w.x / (double)s.x, (double)w.y / (double)s.y);
-        MIN_Z = Math.ceil(MIN_Z * 10 + 1) / 10;
-        MAX_Z = 0.8;
+        MIN_Z = Math.ceil(MIN_Z * 10) / 10;
+        MAX_Z = 1.0;
         MIN_X = w.x - Math.round(s.x * (float)z);
         MAX_X = 0;
         MIN_Y = w.y - Math.round(s.y * (float)z);
@@ -217,27 +224,54 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
     public void paintComponent(Graphics g)
     {
         Graphics2D g2d = (Graphics2D) g.create();
-        this.updateLimits();
-        this.enforceLimits();
-        this.updateTransforms();
         g2d.setRenderingHints(textRenderHints);
         g2d.setRenderingHints(imageRenderHints);
         g2d.setRenderingHints(renderHints);
+        
+        this.updateLimits();
+        this.enforceLimits();
+        try { updateTransforms(); } catch (Exception e) { }
+        
         g2d.drawImage(bg, sc_mv, this);
         for (int i=0; i<199; i++)
         {
-            Point highlight_o = new Point(-100, -100);
-            g2d.drawImage(imgH[highlights[i]], sc_mv_o(ls[i], highlight_o), this);
-            Point station_o = new Point(-50, -40);
-            g2d.drawImage(imgS[stations[i]], sc_mv_o(ls[i], station_o), this);
+            g2d.drawImage(imgH[highlights[i]], sc_mv_o(ls[i], -100, -100), this);
+            g2d.drawImage(imgS[stations[i]], sc_mv_o(ls[i], -50, -40), this);
         }
         for (Colour c : locMap.keySet())
         {
-            Point piece_o = new Point(-50, -150);
-            g2d.drawImage(imgP.get(c), sc_mv_o(ls[locMap.get(c)], piece_o), this);
+            int loc = locMap.get(c);
+            if (loc != 0) g2d.drawImage(imgP.get(c),sc_mv_o(ls[loc-1],-50,-150),this);
         }
+        if (xTurn) g2d.drawImage(imgX, sc_mv_o(ls[locX-1], -50, -150), this);
         g2d.dispose();
         super.paintComponent(g);
+    }
+    
+    public void makeTicketMenu(int l, boolean x, int[] tickets, boolean[] usable)
+    {
+        ticketM = new JPopupMenu();
+        ticketP = new TicketPanel(l, x, tickets, usable);
+        ticketM.add(ticketP);
+    }
+    
+    public void showTicketMenu()
+    {
+        int i = ticketP.location;
+        Point p = new Point(0, 0);
+        sc_mv_o(ls[i], 40, -40).transform(p, p);
+        ticketM.show(this, p.x, p.y - ticketP.h);
+    }
+    
+    public void hideTicketMenu()
+    {
+        ticketM.setVisible(false);
+        repaint();
+    }
+    
+    public void updateMouse(MouseEvent e)
+    {
+        imv_isc.transform(e.getPoint(), m);
     }
     
     public boolean mouseOver(int i)
@@ -247,61 +281,26 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
         return inXrange && inYrange;
     }
     
-    public void mouseClicked(MouseEvent e)
-    {
-        imv_isc.transform(e.getPoint(), m);
-        for (int i=0; i<199; i++)
-        {
-            if (mouseOver(i))
-            {
-                ticketM = new JPopupMenu();
-                int[] t0 = {11, 8, 5, 1, 1};
-                boolean[] m0 = {true, true, true, true, true};
-                ticketP = new TicketPanel(0, false, t0, m0);
-                ticketM.add(ticketP);
-                Point p = new Point(ls[i]);
-                sc_mv.transform(p, p);
-                System.err.println("menu at: " + p.x + " " + p.y);
-                Rectangle bounds = ticketM.getBounds();
-                ticketM.show(this, p.x, p.y - bounds.height);
-            }
-        }
-    }
+    public void mouseClicked(MouseEvent e) { }
     public void mouseDragged(MouseEvent e)
     {
         if (dragging) return;
-        else dragging = true;
         isc.transform(e.getPoint(), m);
         o.x = o0.x + (m.x - m0.x);
         o.y = o0.y + (m.y - m0.y);
         this.repaint();
-        dragging = false;
     }
     public void mouseEntered(MouseEvent e) { }
     public void mouseExited(MouseEvent e) { }
     public void mouseMoved(MouseEvent e)
     {
-        imv_isc.transform(e.getPoint(), m);
+        updateMouse(e);
         for (int i=0; i<199; i++)
         {
-            /*if (mouseOver(i) && highlights[i] == 1)
+            if (highlights[i] != 0)
             {
-                highlights[i] = 2;
-                repaint();
-            }
-            else if (!mouseOver(i) && highlights[i] == 2)
-            {
-                highlights[i] = 1;
-                repaint();
-            }*/
-            if (mouseOver(i))
-            {
-                highlights[i] = 1;
-                repaint();
-            }
-            else if (highlights[i] == 1)
-            {
-                highlights[i] = 0;
+                if (mouseOver(i)) highlights[i] = 2;
+                else              highlights[i] = 1;
                 repaint();
             }
         }
@@ -316,25 +315,21 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
     public void mouseWheelMoved(MouseWheelEvent e)
     {
         if (zooming) return;
-        else zooming = true;
-        imv_isc.transform(e.getPoint(), m);
-        float dz = -0.1f * (float) e.getPreciseWheelRotation();
-        z += dz;
-        if (MIN_Z <= z && z <= MAX_Z)
+        updateMouse(e);
+        float dz = -0.1f * (float)e.getPreciseWheelRotation();
+        double z_ = z + dz;
+        if (MIN_Z <= z_ && z_ <= MAX_Z)
         {
+            z = z_;
             o.x -= Math.round(m.x * dz);
             o.y -= Math.round(m.y * dz);
         }
         this.repaint();
-        zooming = false;
     }
     
     public void actionPerformed(ActionEvent e)
     {
-        if (e.getActionCommand() == "menu")
-        {
-            Rectangle bounds = menuB.getBounds();
-            menu.show(menuB, 0, bounds.height);
-        }
+        String cmd = e.getActionCommand();
+        if (cmd.equals("menu")) menu.show(menuB, 0, menuB.getBounds().height);
     }
 }

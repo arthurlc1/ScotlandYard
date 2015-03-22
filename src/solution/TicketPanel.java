@@ -10,6 +10,8 @@ import java.awt.event.*;
 public class TicketPanel extends JPanel implements ActionListener
 {
     public final int location;
+    public final int w;
+    public final int h;
     
     private static String[] f = {"taxi","bus","tube","secret","double"};
     private final int[] tickets;
@@ -21,8 +23,9 @@ public class TicketPanel extends JPanel implements ActionListener
     public TicketPanel(int l, boolean x, int[] t, boolean[] e)
     {
         location = l;
-        
-        int n = x ? 3 : 5;
+        w = x ? 95 : 155;
+        h = x ? 95 : 155;
+        int n = x ? 5 : 3;
         
         tickets = new int[n];
         System.arraycopy(t, 0, tickets, 0, tickets.length);
