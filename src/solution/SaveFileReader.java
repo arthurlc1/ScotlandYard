@@ -11,11 +11,13 @@ public class SaveFileReader {
 		File file = new File(fileName);
 		Scanner scanner = new Scanner(file);
 		Map<Ticket, Integer> map = new HashMap<Ticket, Integer>();
+		GameHistory history = new GameHistory(sym);
     
-	    Colour startingplayer = Colour.valueOf(scanner.nextLine());
+	    List<Move> moves = new ArrayList<Move>();
+	    int i = 0;
 	    
-		int i;
-		while (scanner.nextLine() != null)
+	    
+	    while (scanner.nextLine() != null)
 		{	
 			String[] line = scanner.nextLine().split(" ");
 			Colour colour = Colour.valueOf(line[0]);
@@ -25,10 +27,13 @@ public class SaveFileReader {
 			{
 				int number = Integer.parseInt(line[i]);
 				map.put(ticket, number);
+				i++;
 			}
-		//ScotlandYardModel.join
-		map.clear();
+			history.join(colour, location, map);
+			map.clear();
+		
 		}
-        return null;
+        
+	    return null;
 	}
 }
