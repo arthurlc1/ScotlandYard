@@ -23,7 +23,7 @@ public class Resources
         "det-w-lo",
         "det-y-lo",
         "null-lo",
-        "background-lo",
+        "background",
         "s-taxi",
         "s-bus",
         "s-tube",
@@ -65,13 +65,6 @@ public class Resources
             catch (IOException e) { System.err.println(s + ".png not found."); }
             locks.get(s).countDown();
         }
-        Image tmp = images.get("background-lo").getScaledInstance(5625, 4655, Image.SCALE_SMOOTH);
-        BufferedImage dimg = new BufferedImage(5625, 4655, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = dimg.createGraphics();
-        g2d.drawImage(tmp, 0, 0, null);
-        g2d.dispose();
-        images.put("background-re", dimg);
-        locks.get("background-re").countDown();
         System.err.println("Done!");
     }
     

@@ -20,11 +20,11 @@ public class TicketPanel extends JPanel implements ActionListener
     private JLabel[] num = new JLabel[5];
     private JButton[] play = new JButton[5];
     
-    public TicketPanel(int l, boolean x, int[] t, boolean[] e)
+    public TicketPanel(int l, boolean x, int[] t, boolean[] e, ActionListener al)
     {
         location = l;
-        w = x ? 95 : 155;
-        h = x ? 95 : 155;
+        w = x ? 155 : 95;
+        h = x ? 155 : 95;
         int n = x ? 5 : 3;
         
         tickets = new int[n];
@@ -57,7 +57,7 @@ public class TicketPanel extends JPanel implements ActionListener
             else
             {
                 play[i].setActionCommand(location + "-" + f[i]);
-                //play[i].addActionListener(control);
+                play[i].addActionListener(al);
                 play[i].addActionListener(this);
             }
             gbc.gridx = 2;
@@ -68,7 +68,6 @@ public class TicketPanel extends JPanel implements ActionListener
     public void actionPerformed(ActionEvent e)
     {
         String name = e.getActionCommand().split("-")[1];
-        System.err.println("played " + name);
         for (int i=0; i<tickets.length; i++)
         {
             if (f[i].equals(name))

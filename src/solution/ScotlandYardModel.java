@@ -64,7 +64,6 @@ public class ScotlandYardModel extends ScotlandYard
             pieces.add(newPiece);
             if (history != null) history.pieces.add(newPiece);
         }
-        System.err.println(colour.toString() + ": " + location);
         return true;
     }
     

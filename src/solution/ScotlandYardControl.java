@@ -19,7 +19,9 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     
     private Colour cP;
     private int[] cT;
+    private int cL;
     private List<Move> validMoves;
+    private boolean[] ts;
     private boolean[][] usable;
     
     private CountDownLatch moveChosen;
@@ -51,7 +53,6 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         Random rand = new Random();
         for (Colour c : colours)
         {
-            System.err.println(c.toString() + ":");
             int s;
             if (c == black) s = xStarts.get(rand.nextInt(xStarts.size()));
             else
@@ -59,9 +60,7 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
                 s = dStarts.get(rand.nextInt(dStarts.size()));
                 dStarts.remove(dStarts.indexOf(s));
             }
-            System.err.println("located,");
             Map<Ticket,Integer> t = (c == black ? MrX.getMap() : Detective.getMap());
-            System.err.println("joined.");
             if (model.join(this, c, s, t)) history.join(c, s, t);
         }
     }
@@ -76,47 +75,84 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     public Move notify(int location, List<Move> validMoves)
     {
         this.validMoves = validMoves;
-        boolean pass = false;
-        boolean ts[] = new boolean[199];
-        usable = new boolean[199][5];
+        if (validMoves.get(0) instanceof MovePass) return validMoves.get(0);
         cP = model.getCurrentPlayer();
+        cL = model.getPiece(cP).find();
+        cT = new int[5];
+        for (Ticket t : Ticket.values()) cT[t2i(t)] = model.getPlayerTickets(cP, t);
         if (cP == black)
         {
             JOptionPane.showMessageDialog(display, new JLabel("Mr. X's turn is about to start. Other players, look away now!"), "WARNING", JOptionPane.WARNING_MESSAGE);
             display.setxTurn(true);
         }
-        for (Move m : validMoves)
-        {
-            MoveTicket mt = null;
-            if (m instanceof MovePass)
-            {
-                pass = true;
-                break;
-            }
-            if (m instanceof MoveTicket) mt = (MoveTicket)m;
-            if (m instanceof MoveDouble)
-            {
-                mt = (MoveTicket)((MoveDouble)m).moves.get(0);
-                usable[mt.target-1][4] = true;
-            }
-            else System.err.println(m.toString());
-            ts[mt.target-1] = true;
-            usable[mt.target-1][t2i(mt.ticket)] = true;
-        }
-        System.err.println("Moves processed.");
-        display.updateTargets(ts);
-        cT = new int[5];
-        for (Ticket t : Ticket.values()) cT[t2i(t)] = model.getPlayerTickets(cP, t);
-        System.err.println("Tickets retrieved.");
+        processMoves(true);
         chosenMove = null;
         moveChosen = new CountDownLatch(1);
         try { moveChosen.await(); } catch (Exception e) { }
         return chosenMove;
     }
     
+    public void processMoves(boolean m1)
+    {
+        ts = new boolean[199];
+        usable = new boolean[199][5];
+        for (Move m : validMoves)
+        {
+            boolean m2 = false;
+            MoveTicket mt = null;
+            if (m instanceof MoveTicket && m1) mt = (MoveTicket)m;
+            if (m instanceof MoveDouble)
+            {
+                mt = (MoveTicket)((MoveDouble)m).moves.get(0);
+                if (m1) usable[mt.target-1][4] = true;
+                else if (mt.target == cL)
+                {
+                    mt = (MoveTicket)((MoveDouble)m).moves.get(1);
+                    m2 = true;
+                }
+            }
+            if (m1 || m2)
+            {
+                ts[mt.target-1] = true;
+                usable[mt.target-1][t2i(mt.ticket)] = true;
+            }
+            
+        }
+        display.updateTargets(ts);
+    }
+    
     public void actionPerformed(ActionEvent e)
     {
-        
+        String cmd = e.getActionCommand();
+        if (cmd.equals("save")) { }
+        if (cmd.equals("load")) { }
+        if (cmd.equals("quit")) { }
+        else
+        {
+            MoveTicket m;
+            String[] terms = cmd.split("-");
+            if (terms[1].equals("double"))
+            {
+                dbl = true;
+                for (int i=0; i<199; i++) usable[i][4] = false;
+                return;
+            }
+            display.hideTicketMenu();
+            int l = Integer.parseInt(terms[0]);
+            Ticket t = s2t(terms[1]);
+            m = new MoveTicket(cP, l, t);
+            display.play(cP, l, model.getRounds().get(model.getRound()));
+            if (chosenMove != null) chosenMove = new MoveDouble(cP, chosenMove, m);
+            else chosenMove = m;
+            if (dbl)
+            {
+                cL = l;
+                processMoves(dbl = false);
+                return;
+            }
+            display.setxTurn(false);
+            moveChosen.countDown();
+        }
     }
     
     public List<Colour> getColours()
@@ -128,7 +164,6 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     {
         Map<Colour,Integer> out = new HashMap<Colour,Integer>();
         for (Colour c : getColours()) out.put(c, model.getPlayerLocation(c));
-        for (Colour c : getColours()) System.err.println(c.toString() + ": " + model.getPlayerLocation(c));
         return out;
     }
     
@@ -138,7 +173,7 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         display.updateMouse(e);
         for (int i=0; i<199; i++) if (display.mouseOver(i))
         {
-            display.makeTicketMenu(i, cP == black, cT, usable[i]);
+            display.makeTicketMenu(i+1, cP == black, cT, usable[i], this);
             display.showTicketMenu();
             break;
         }
@@ -149,6 +184,16 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         List<Boolean> out = new ArrayList<Boolean>();
         for (char c : str.toCharArray()) out.add(c == '1');
         return out;
+    }
+    
+    private static Ticket s2t(String s)
+    {
+        if (s.equals("taxi"))        return Ticket.Taxi;
+        else if (s.equals("bus"))    return Ticket.Bus;
+        else if (s.equals("tube"))   return Ticket.Underground;
+        else if (s.equals("secret")) return Ticket.SecretMove;
+        else if (s.equals("double")) return Ticket.DoubleMove;
+        else return null;
     }
     
     private static int t2i(Ticket t)

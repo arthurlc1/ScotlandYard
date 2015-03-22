@@ -85,9 +85,10 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
         this.locMap = locMap;
         this.locX = locX;
         
-        z = 0.5;
+        z = 0.4;
         o = new Point();
         m = new Point();
+        
         try { updateTransforms(); } catch (Exception e) { }
         getImages();
         try { getNodes(); } catch(FileNotFoundException e) { }
@@ -100,8 +101,8 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
     
     public void getImages()
     {
-        bg = Resources.get("background-re");
-        s = new Point(bg.getWidth(), bg.getHeight());
+        bg = Resources.get("background");
+        s = new Point(5625, 4655);
         imgS[0] = Resources.get("s-taxi");
         imgS[1] = Resources.get("s-bus");
         imgS[2] = Resources.get("s-tube");
@@ -202,7 +203,7 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
     {
         w = new Point(getWidth(), getHeight());
         MIN_Z = Math.max((double)w.x / (double)s.x, (double)w.y / (double)s.y);
-        MIN_Z = Math.ceil(MIN_Z * 10) / 10;
+        MIN_Z = Math.ceil(MIN_Z * 10 - 1) / 10;
         MAX_Z = 1.0;
         MIN_X = w.x - Math.round(s.x * (float)z);
         MAX_X = 0;
@@ -248,10 +249,10 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
         super.paintComponent(g);
     }
     
-    public void makeTicketMenu(int l, boolean x, int[] tickets, boolean[] usable)
+    public void makeTicketMenu(int l, boolean x, int[] tickets, boolean[] usable, ActionListener al)
     {
         ticketM = new JPopupMenu();
-        ticketP = new TicketPanel(l, x, tickets, usable);
+        ticketP = new TicketPanel(l, x, tickets, usable, al);
         ticketM.add(ticketP);
     }
     
@@ -259,7 +260,7 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
     {
         int i = ticketP.location;
         Point p = new Point(0, 0);
-        sc_mv_o(ls[i], 40, -40).transform(p, p);
+        sc_mv_o(ls[i-1], 40, -40).transform(p, p);
         ticketM.show(this, p.x, p.y - ticketP.h);
     }
     
