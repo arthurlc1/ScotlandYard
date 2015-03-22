@@ -14,6 +14,7 @@ public class SaveFileWriter {
 		PrintWriter writer = new PrintWriter(file, "UTF-8");
 		List<Piece> pieces = history.pieces;	
 		List<Move> moves = history.moves;
+		
 		for (Move move : moves) 
 		{
 			writer.print(move.toString() + " ");
