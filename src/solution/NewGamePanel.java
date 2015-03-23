@@ -26,10 +26,8 @@ public class NewGamePanel extends JPanel implements ActionListener
         start = new JButton("Start Game");
         start.setActionCommand("start");
         start.addActionListener(this);
-        
         players = new PlayerSetupPanel[6];
         for (int i=0; i<6; i++) players[i] = new PlayerSetupPanel(i);
-        
         this.setLayout(new GridBagLayout());
         
         // Set out 'back' button.

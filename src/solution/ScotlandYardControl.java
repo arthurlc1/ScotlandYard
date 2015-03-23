@@ -21,14 +21,13 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     private GameHistory history;
     
     private Colour cP;
-    private int[] cT;
-    private int cL;
     private List<Move> validMoves;
-    private boolean[] ts;
-    private boolean[][] usable;
+    private List<Integer> targets;
+    private Map<Ticket,Integer> tickets;
+    private Map<Integer,Map<Ticket,Boolean>> usable;
+    private boolean dbl;
     
     private CountDownLatch moveChosen;
-    private boolean dbl = false;
     private Move chosenMove;
     
     public ScotlandYardControl(GameHistory history)
@@ -74,8 +73,19 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     {
         this.display = display;
         display.init(getLocMap(), model.getPiece(black).find());
-        display.addMouseListener(this);
         display.makeMenu(this);
+    }
+    
+    public Map<Colour,Integer> getLocMap()
+    {
+        Map<Colour,Integer> out = new HashMap<Colour,Integer>();
+        for (Colour c : getColours()) out.put(c, model.getPlayerLocation(c));
+        return out;
+    }
+    
+    public List<Colour> getColours()
+    {
+        return model.getPlayers();
     }
     
     public void launchModel()
@@ -108,51 +118,105 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     
     public Move notify(int location, List<Move> validMoves)
     {
-        this.validMoves = validMoves;
-        if (validMoves.get(0) instanceof MovePass) return validMoves.get(0);
-        cP = model.getCurrentPlayer();
-        cL = model.getPiece(cP).find();
-        cT = new int[5];
-        for (Ticket t : Ticket.values()) cT[t2i(t)] = model.getPlayerTickets(cP, t);
-        if (cP == black)
+        display.makeReady(this);
+        chosenMove = null;
+        dbl = false;
+        if (validMoves.get(0) instanceof MovePass)
         {
-            JOptionPane.showMessageDialog(display, new JLabel("Mr. X's turn is about to start. Other players, look away now!"), "Warning! Mr. X's turn.", JOptionPane.WARNING_MESSAGE);
+            // Inform player of lack of valid moves.
+            return validMoves.get(0);
+        }
+        if ((cP = validMoves.get(0).colour) == black)
+        {
+            String t = "Warning! Mr. X's turn.";
+            String m = "Mr. X's turn is about to start. Other players, look away now!";
+            JOptionPane.showMessageDialog(display, m, t, JOptionPane.WARNING_MESSAGE);
             display.setxTurn(true);
         }
-        processMoves(true);
-        chosenMove = null;
+        display.updateLoc(location);
+        this.validMoves =  validMoves;
+        tickets = model.getCurrentPlayerTickets();
+        processMoves();
         moveChosen = new CountDownLatch(1);
-        try { moveChosen.await(); } catch (Exception e) { }
+        try { moveChosen.await(); }
+        catch (Exception e) { throw new Error("Interrupted while waiting for move!"); }
+        System.err.println(chosenMove.toString());
         return chosenMove;
     }
     
-    public void processMoves(boolean m1)
+    public void processMoves()
     {
-        ts = new boolean[199];
-        usable = new boolean[199][5];
+        usable = new HashMap<Integer,Map<Ticket,Boolean>>();
+        for (int i=0; i<199; i++)
+        {
+            usable.put(i+1, new HashMap<Ticket,Boolean>());
+            for (Ticket t : Ticket.values()) usable.get(i+1).put(t, false);
+        }
+        targets = new ArrayList<Integer>();
         for (Move m : validMoves)
         {
-            boolean m2 = false;
             MoveTicket mt = null;
-            if (m instanceof MoveTicket && m1) mt = (MoveTicket)m;
+            if (m instanceof MoveTicket && !dbl)
+            {
+                mt = (MoveTicket)m;
+                targets.add(mt.target);
+                usable.putIfAbsent(mt.target, new HashMap<Ticket,Boolean>());
+                usable.get(mt.target).put(mt.ticket, true);
+            }
             if (m instanceof MoveDouble)
             {
-                mt = (MoveTicket)((MoveDouble)m).moves.get(0);
-                if (m1) usable[mt.target-1][4] = true;
-                else if (mt.target == cL)
+                mt = (MoveTicket) ((MoveDouble)m).moves.get(0);
+                if (dbl && mt.target == ((MoveTicket)chosenMove).target)
                 {
-                    mt = (MoveTicket)((MoveDouble)m).moves.get(1);
-                    m2 = true;
+                    mt = (MoveTicket) ((MoveDouble)m).moves.get(1);
+                    targets.add(mt.target);
+                    usable.putIfAbsent(mt.target, new HashMap<Ticket,Boolean>());
+                    usable.get(mt.target).put(mt.ticket, true);
+                }
+                else
+                {
+                    usable.putIfAbsent(mt.target, new HashMap<Ticket,Boolean>());
+                    usable.get(mt.target).put(Ticket.DoubleMove, true);
                 }
             }
-            if (m1 || m2)
-            {
-                ts[mt.target-1] = true;
-                usable[mt.target-1][t2i(mt.ticket)] = true;
-            }
-            
         }
-        display.updateTargets(ts);
+        display.updateTargets(targets);
+    }
+    
+    public void play(int target, Ticket ticket)
+    {
+        if (ticket == Ticket.DoubleMove)
+        {
+            dbl = true;
+            (targets = new ArrayList<Integer>()).add(target);
+            usable.get(target).replace(Ticket.DoubleMove, false);
+        }
+        else
+        {
+            display.hideTicketMenu();
+            MoveTicket move = new MoveTicket(cP, target, ticket);
+            display.play(cP, target, ticket, model.getNextRound());
+            if (dbl)
+            {
+                if (chosenMove == null)
+                {
+                    chosenMove = move;
+                    processMoves();
+                }
+                else
+                {
+                    chosenMove = new MoveDouble(cP, chosenMove, move);
+                    display.setxTurn(false);
+                    moveChosen.countDown();
+                }
+            }
+            else
+            {
+                chosenMove = move;
+                display.setxTurn(false);
+                moveChosen.countDown();
+            }
+        }
     }
     
     public void exitToMenu()
@@ -165,66 +229,50 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     public void actionPerformed(ActionEvent e)
     {
         String cmd = e.getActionCommand();
-        if (cmd.equals("save")) { /* Save game from history. */ }
-        if (cmd.equals("load")) { /* Load new game from file. */ }
-        if (cmd.equals("quit")) exitToMenu();
-        else
-        {
-            MoveTicket m;
-            String[] terms = cmd.split("-");
-            if (terms[1].equals("double"))
-            {
-                dbl = true;
-                for (int i=0; i<199; i++) usable[i][4] = false;
-                return;
-            }
-            display.hideTicketMenu();
-            int l = Integer.parseInt(terms[0]);
-            Ticket t = s2t(terms[1]);
-            m = new MoveTicket(cP, l, t);
-            display.play(cP, l, t2i(t), model.getRounds().get(model.getRound() + 1));
-            if (chosenMove != null) chosenMove = new MoveDouble(cP, chosenMove, m);
-            else chosenMove = m;
-            if (dbl)
-            {
-                cL = l;
-                processMoves(dbl = false);
-                return;
-            }
-            display.setxTurn(false);
-            moveChosen.countDown();
-        }
-    }
-    
-    public List<Colour> getColours()
-    {
-        return model.getPlayers();
-    }
-    
-    public Map<Colour,Integer> getLocMap()
-    {
-        Map<Colour,Integer> out = new HashMap<Colour,Integer>();
-        for (Colour c : getColours()) out.put(c, model.getPlayerLocation(c));
-        return out;
+        if      (cmd.equals("save")) { /* Save game from history. */ }
+        else if (cmd.equals("load")) { /* Load new game from file. */ }
+        else                         exitToMenu();
     }
     
     @Override
     public void mouseClicked(MouseEvent e)
     {
         display.updateMouse(e);
-        for (int i=0; i<199; i++) if (display.mouseOver(i) && ts[i])
+        for (int i=0; i<199; i++)
         {
-            display.makeTicketMenu(i+1, cP == black, cT, usable[i], this);
-            display.showTicketMenu();
-            break;
+            if (display.mouseOver(i) && targets.contains(i+1))
+            {
+                display.makeTicketMenu(i+1, cP == black, tickets, usable.get(i+1), this);
+                display.showTicketMenu();
+                break;
+            }
         }
     }
     
-    private static List<Boolean> str2bools(String str)
+    @Override
+    public void mouseMoved(MouseEvent e)
     {
-        List<Boolean> out = new ArrayList<Boolean>();
-        for (char c : str.toCharArray()) out.add(c == '1');
-        return out;
+        display.updateMouse(e);
+        display.paintTargets();
+    }
+    
+    @Override
+    public void mousePressed(MouseEvent e)
+    {
+        display.startDrag(e);
+    }
+    
+    @Override
+    public void mouseDragged(MouseEvent e)
+    {
+        display.dragTick(e);
+    }
+    
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e)
+    {
+        display.updateMouse(e);
+        display.zoomTick(-0.1f * (float)e.getPreciseWheelRotation());
     }
     
     private static Ticket s2t(String s)

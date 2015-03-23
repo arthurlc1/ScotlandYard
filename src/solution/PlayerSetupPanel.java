@@ -17,7 +17,6 @@ public class PlayerSetupPanel extends JPanel implements ActionListener
     private String name;
     
     private ImageIcon imgIcon;
-    private static ImageIcon nullIcon = new ImageIcon(Resources.get("null-lo"));
     private JLabel imgLabel;
     
     private PlayerType pt;
@@ -26,17 +25,8 @@ public class PlayerSetupPanel extends JPanel implements ActionListener
     public PlayerSetupPanel(int i)
     {
         colour = Colour.values()[i];
-        if (i == 0)
-        {
-            name = "Mr. X";
-            imgIcon = new ImageIcon(Resources.get("mr-x-lo"));
-        }
-        else
-        {
-            name = "Detective " + i;
-            String[] cs = {"b","g","r","w","y"};
-            imgIcon = new ImageIcon(Resources.get("det-" + cs[i-1] + "-lo"));
-        }
+        name = (i == 0) ? "Mr. X" : "Detective " + i;
+        imgIcon = new ImageIcon(Resources.get(colour));
         
         pt = PlayerType.Player;
         if (i == 0) ptBox = new JComboBox<String>(new String[] {"Player"});
@@ -65,16 +55,9 @@ public class PlayerSetupPanel extends JPanel implements ActionListener
     
     public void actionPerformed(ActionEvent e)
     {
-        if (ptBox.getItemAt(ptBox.getSelectedIndex()) == "Player")
-        {
-            pt = PlayerType.Player;
-            imgLabel.setIcon(imgIcon);
-        }
-        else
-        {
-            pt = PlayerType.Off;
-            imgLabel.setIcon(nullIcon);
-        }
+        pt = PlayerType.values()[ptBox.getSelectedIndex()];
+        imgIcon = new ImageIcon(Resources.get(colour, pt == PlayerType.Player));
+        imgLabel.setIcon(imgIcon);
         imgLabel.revalidate();
     }
     

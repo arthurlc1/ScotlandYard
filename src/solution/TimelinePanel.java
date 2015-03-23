@@ -16,7 +16,6 @@ public class TimelinePanel extends JPanel
     public static Dimension imgSize;
     
     private static BufferedImage timeline;
-    private static BufferedImage[] tickets = new BufferedImage[4];
     
     private java.util.List<BufferedImage> moves;
     
@@ -25,11 +24,6 @@ public class TimelinePanel extends JPanel
         timeline = Resources.get("timeline");
         imgSize = new Dimension(timeline.getWidth(), timeline.getHeight());
         
-        tickets[0] = Resources.get("t-taxi-lo");
-        tickets[1] = Resources.get("t-bus-lo");
-        tickets[2] = Resources.get("t-tube-lo");
-        tickets[3] = Resources.get("t-secret-lo");
-        
         moves = new ArrayList<BufferedImage>();
         
         this.setOpaque(false);
@@ -37,9 +31,9 @@ public class TimelinePanel extends JPanel
         this.setSize(imgSize);
     }
     
-    public void add(int i)
+    public void add(Ticket ticket)
     {
-        moves.add(tickets[i]);
+        moves.add(Resources.get(ticket));
     }
     
     @Override

@@ -175,8 +175,10 @@ public class ScotlandYardModel extends ScotlandYard
     protected void play(MoveDouble move)
     {
         for (Spectator s : spectators) s.notify(move);
+        getPiece(move.colour).play(move);
         play((MoveTicket) move.moves.get(0));
         play((MoveTicket) move.moves.get(1));
+        System.err.println("Double move!");
     }
     
     // No change to locations, but notify spectators that a pass has been played.
@@ -224,11 +226,23 @@ public class ScotlandYardModel extends ScotlandYard
         return getPiece(colour).tickets.get(ticket);
     }
     
+    // Return a COPY of the current player's ticket map.
+    public Map<Ticket, Integer> getCurrentPlayerTickets()
+    {
+        return new HashMap<Ticket,Integer>(pieces.get(currentPlayer).tickets);
+    }
+    
     // Return the current round number.
     @Override
     public int getRound()
     {
         return round;
+    }
+    
+    // Return the value of the next round.
+    public boolean getNextRound()
+    {
+        return rounds.get(round + 1);
     }
     
     // Return the list of rounds.

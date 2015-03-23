@@ -2,6 +2,8 @@ package solution;
 
 import scotlandyard.*;
 
+import java.util.Map;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
@@ -9,26 +11,28 @@ import java.awt.event.*;
 
 public class TicketPanel extends JPanel implements ActionListener
 {
+    private static String[] names = {"taxi","bus","tube","secret","double"};
+    private static Ticket[] ticket =
+    {Ticket.Taxi, Ticket.Bus, Ticket.Underground, Ticket.SecretMove, Ticket.DoubleMove};
+    
+    private final ScotlandYardControl control;
     public final int location;
-    public final int w;
     public final int h;
     
-    private static String[] f = {"taxi","bus","tube","secret","double"};
-    private final int[] tickets;
+    private final Map<Ticket,Integer> tickets;
     
     private JLabel[] img = new JLabel[5];
     private JLabel[] num = new JLabel[5];
     private JButton[] play = new JButton[5];
     
-    public TicketPanel(int l, boolean x, int[] t, boolean[] e, ActionListener al)
+    public TicketPanel(int location, boolean x, Map<Ticket,Integer> tickets, Map<Ticket,Boolean> usable, ScotlandYardControl control)
     {
-        location = l;
-        w = x ? 155 : 95;
+        this.location = location;
+        this.tickets = tickets;
+        this.control = control;
+        
         h = x ? 155 : 95;
         int n = x ? 5 : 3;
-        
-        tickets = new int[n];
-        System.arraycopy(t, 0, tickets, 0, tickets.length);
         
         img = new JLabel[n];
         num = new JLabel[n];
@@ -41,25 +45,24 @@ public class TicketPanel extends JPanel implements ActionListener
         
         for (int i=0; i<n; i++)
         {
-            String ext = e[i] ? "-lo" : "-d";
-            img[i] = new JLabel(new ImageIcon(Resources.get("t-"+f[i]+ext)));
+            Ticket t = ticket[i];
+            img[i] = new JLabel(new ImageIcon(Resources.get(t, !usable.get(t))));
             gbc.gridy = i;
             gbc.gridx = 0;
             this.add(img[i], gbc);
             
-            num[i] = new JLabel("x" + t[i]);
-            if (!e[i]) num[i].setForeground(Color.GRAY);
+            num[i] = new JLabel("x" + tickets.get(t));
+            if (!usable.get(t)) num[i].setForeground(Color.GRAY);
             gbc.gridx = 1;
             this.add(num[i], gbc);
             
             play[i] = new JButton("Play");
-            if (!e[i]) play[i].setEnabled(false);
-            else
-            {
-                play[i].setActionCommand(location + "-" + f[i]);
-                play[i].addActionListener(al);
-                play[i].addActionListener(this);
-            }
+            if (!usable.get(t)) play[i].setEnabled(false);
+            //else
+            //{
+            play[i].setActionCommand(location + "-" + names[i]);
+            play[i].addActionListener(this);
+            //}
             gbc.gridx = 2;
             this.add(play[i], gbc);
         }
@@ -68,19 +71,22 @@ public class TicketPanel extends JPanel implements ActionListener
     public void actionPerformed(ActionEvent e)
     {
         String name = e.getActionCommand().split("-")[1];
-        for (int i=0; i<tickets.length; i++)
+        for (int i=0; i<names.length; i++)
         {
-            if (f[i].equals(name))
+            if (names[i].equals(name))
             {
-                int newNum = Integer.parseInt(num[i].getText().split("x")[1]);
-                num[i].setText("x" + --newNum);
-                if (i == 4 || newNum == 0)
+                int num_ = tickets.get(ticket[i]) - 1;
+                tickets.replace(ticket[i], num_);
+                num[i].setText("x" + num_);
+                if (i == 4 || num_ == 0)
                 {
-                    img[i].setIcon(new ImageIcon(Resources.get("t-"+f[i]+"-d")));
+                    img[i].setIcon(new ImageIcon(Resources.get(ticket[i])));
                     num[i].setForeground(Color.GRAY);
                     play[i].setEnabled(false);
                 }
                 repaint();
+                control.play(location, ticket[i]);
+                break;
             }
         }
     }
