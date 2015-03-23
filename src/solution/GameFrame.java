@@ -16,15 +16,15 @@ public class GameFrame extends JFrame
         this.setLocationByPlatform(true);
         this.setPreferredSize(new Dimension(800, 600));
         
-        //this.setScreen(new MainMenuPanel());
-        this.setScreen(new ScotlandYardDisplay(Arrays.asList(Colour.class.getEnumConstants())));
+        this.setScreen(new MainMenuPanel());
+        //this.setScreen(new ScotlandYardDisplay(Arrays.asList(Colour.class.getEnumConstants())));
         
         this.setVisible(true);
     }
     
     public void setScreen(JPanel p)
     {
-        if (p instanceof ScotlandYardDisplay) this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+        //if (p instanceof ScotlandYardDisplay) this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
         this.setMinimumSize(p.getPreferredSize());
         this.setPreferredSize(p.getPreferredSize());
         this.getContentPane().removeAll();
