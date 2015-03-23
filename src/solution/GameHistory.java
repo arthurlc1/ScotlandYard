@@ -9,6 +9,7 @@ public class GameHistory implements Spectator
 {
     public final List<Piece> pieces;
     public final List<Move> moves;
+
     
     public GameHistory(ScotlandYardModel model)
     {
@@ -16,6 +17,12 @@ public class GameHistory implements Spectator
         moves = new ArrayList<Move>();
         
         model.spectate(this);
+    }
+    public GameHistory()
+    {
+    	pieces = new ArrayList<Piece>();
+        moves = new ArrayList<Move>();
+        
     }
     
     public void join(Colour c, int l, Map<Ticket, Integer> t)

@@ -1,14 +1,32 @@
 package solution;
 
 import java.io.*;
-import java.util.*;
+
 import scotlandyard.*;
 
-public class SaveFileReader {
-	
-	public static GameHistory read(String fileName) throws FileNotFoundException
+public class SaveFileReader 
+{
+	public static GameHistory read(String fileName) throws IOException, ClassNotFoundException
 	{
-		File file = new File(fileName);
+		ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(fileName)); 
+		GameHistory history = new GameHistory();
+		Piece piece;
+		Move move;
+		for (int i = 0; i<=5; i++)
+		{
+			piece = (Piece)objectInputStream.readObject();
+			history.join(piece.colour, piece.find(), piece.tickets); 
+		}
+		while(objectInputStream.readObject() != null)
+		{
+			move = (Move)objectInputStream.readObject();
+			history.notify(move);
+		}
+		objectInputStream.close();
+        return history;
+	}
+}
+/*		File file = new File(fileName);
 		Scanner scanner = new Scanner(file);
 		Map<Ticket, Integer> map = new HashMap<Ticket, Integer>();
 		GameHistory history = new GameHistory(sym);
@@ -37,3 +55,4 @@ public class SaveFileReader {
 	    return null;
 	}
 }
+*/

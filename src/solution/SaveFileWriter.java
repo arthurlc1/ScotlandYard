@@ -14,8 +14,32 @@ public class SaveFileWriter {
 		PrintWriter writer = new PrintWriter(file, "UTF-8");
 		List<Piece> pieces = history.pieces;	
 		List<Move> moves = history.moves;
+		ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file));
+		//for (Piece piece : pieces) 
+		//{
+			//objectOutputStream.writeObject(piece);
+		//}
+		for (Move move : moves)
+		{
+		objectOutputStream.writeObject(move);
+		}
 		
-		for (Move move : moves) 
+		objectOutputStream.flush();
+		objectOutputStream.close();
+		writer.print("\n");
+		for (Piece piece : pieces) 
+		{
+			writer.print(piece.colour + " " + piece.find());
+			for (Ticket ticket : piece.tickets.keySet())
+			{
+				writer.print(" " + piece.tickets.get(ticket));
+			}
+			writer.print("\n");
+		}
+	writer.close();
+	}
+}
+/*		for (Move move : moves) 
 		{
 			writer.print(move.toString() + " ");
 		}
