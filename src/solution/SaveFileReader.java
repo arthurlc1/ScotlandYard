@@ -31,18 +31,24 @@ public class SaveFileReader
         return history;
 	}
 
-	public static void main(String[] args) throws IOException
+	public static void main(String[] args) throws IOException, ClassNotFoundException
 	{
 		List<Boolean> ting = new ArrayList<Boolean>();
-		Player player1;
 		for(int i = 0 ; i<20; i++)
 		{
 			ting.add(true);
 		}
-		ScotlandYardModel sym = new ScotlandYardModel(1,ting, "graph.txt");
+		ScotlandYardModel sym = ScotlandYardModel.defaultGame(2);
+		GameHistory history = new GameHistory(sym);
 		Map<Ticket, Integer> map = new HashMap<Ticket, Integer>();
-		map.add
-		sym.join(player1, "BLUE", 143, )
+		map.put(Ticket.Bus, 2);
+		map.put(Ticket.Taxi, 3);
+		sym.join(null, Colour.Blue, 143, map, history );
+		sym.join(null, Colour.Red, 149, map, history );
+		sym.join(null, Colour.Black, 123, map, history );
+		SaveFileWriter.write("game.txt", history);
+		SaveFileReader.read("game.txt");
+		
 	}
 
 
