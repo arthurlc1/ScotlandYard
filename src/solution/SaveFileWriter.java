@@ -13,7 +13,9 @@ public class SaveFileWriter {
 		File file = new File(fileName);
 		List<Piece> pieces = history.pieces;	
 		List<Move> moves = history.moves;
+		int i = pieces.size();
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file));
+		objectOutputStream.writeInt(i);
 		for (Piece piece : pieces) 
 		{
 			objectOutputStream.writeObject(piece);
