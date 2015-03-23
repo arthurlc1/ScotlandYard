@@ -55,12 +55,16 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
     private boolean dragging = false;
     private boolean zooming = false;
     
+    private GridBagConstraints gbc;
+    
     private JButton menuB;
     private JPopupMenu menu;
     private JMenuItem save, load, quit;
     
     private TicketPanel ticketP;
     private JPopupMenu ticketM;
+    
+    private TimelinePanel timeline;
     
     // Initialise SYC from list of colours, for new game.
     public ScotlandYardDisplay(java.util.List<Colour> colours)
@@ -78,7 +82,12 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
     {
         this.setPreferredSize(new Dimension(1200,700));
         this.setOpaque(false);
-        this.setLayout(null);
+        this.setLayout(new GridBagLayout());
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
         
         tickets = new int[] {11, 8, 5, 5, 2};
         usable = new boolean[] {true, true, true, true, true};
@@ -92,7 +101,8 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
         try { updateTransforms(); } catch (Exception e) { }
         getImages();
         try { getNodes(); } catch(FileNotFoundException e) { }
-        makeMenu();
+        
+        makeTimeline();
         
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
@@ -134,7 +144,7 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
         }
     }
     
-    public void makeMenu()
+    public void makeMenu(ScotlandYardControl control)
     {
         menuB = new JButton(new ImageIcon(Resources.get("menu")));
         menu = new JPopupMenu();
@@ -144,11 +154,27 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
         menu.add(save);
         menu.add(load);
         menu.add(quit);
-        this.add(menuB);
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        this.add(menuB, gbc);
         Dimension size = menuB.getPreferredSize();
         menuB.setBounds(5, 5, size.width - 3, size.height);
         menuB.setActionCommand("menu");
         menuB.addActionListener(this);
+        save.setActionCommand("save");
+        save.addActionListener(control);
+        load.setActionCommand("load");
+        load.addActionListener(control);
+        quit.setActionCommand("quit");
+        quit.addActionListener(control);
+    }
+    
+    public void makeTimeline()
+    {
+        timeline = new TimelinePanel();
+        gbc.anchor = GridBagConstraints.PAGE_END;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        this.add(timeline, gbc);
     }
     
     public void updateTargets(boolean[] ts)
@@ -162,14 +188,13 @@ public class ScotlandYardDisplay extends JPanel implements MouseListener, MouseM
         repaint();
     }
     
-    public void play(Colour c, int target)
+    public void play(Colour c, int target, int ticket, boolean xReveal)
     {
-        play(c, target, false);
-    }
-    
-    public void play(Colour c, int target, boolean xReveal)
-    {
-        if (c == black)            locX = target;
+        if (c == black)
+        {
+            locX = target;
+            timeline.add(ticket);
+        }
         if (c != black || xReveal) locMap.put(c,target);
         repaint();
     }

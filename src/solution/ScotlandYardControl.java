@@ -11,6 +11,9 @@ import java.awt.event.*;
 
 public class ScotlandYardControl extends MouseAdapter implements Player, ActionListener
 {
+    private Thread mainThread;
+    private Thread modelThread;
+    
     private final static Colour black = Colour.Black;
     
     private ScotlandYardModel model;
@@ -32,7 +35,8 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     {
         try { model = history.toGame(this); }
         catch (IOException e) { }
-        new Thread(model::start).start();
+        
+        launchModel();
     }
     
     public ScotlandYardControl(List<Colour> colours)
@@ -41,7 +45,8 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         catch (IOException e) { }
         history = new GameHistory(model);
         init(colours);
-        new Thread(model::start).start();
+        
+        launchModel();
     }
     
     public void init(List<Colour> colours)
@@ -70,23 +75,35 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         this.display = display;
         display.init(getLocMap(), model.getPiece(black).find());
         display.addMouseListener(this);
+        display.makeMenu(this);
+    }
+    
+    public void launchModel()
+    {
+        new Thread(this::startGame).start();
     }
     
     public void startGame()
     {
         model.start();
         String title;
-        JLabel message;
+        String message;
         if (model.getWinningPlayers().contains(black))
         {
             title = "Mr. X wins!";
-            message = new JLabel("Mr. X has evaded capture for long enough to escape. Game over.");
+            message = "Mr. X has evaded capture for long enough to escape! Game over.";
         }
         else
         {
             title = "Detectives win!";
-            message = new JLabel("The detective have successfully captured Mr. X. Game over.");
+            message = "The detective have successfully captured Mr. X! Game over.";
         }
+        String[] options = {"Save Replay","Main Menu"};
+        if (JOptionPane.showOptionDialog(display,message,title,JOptionPane.YES_NO_OPTION,JOptionPane.PLAIN_MESSAGE,null,options,1) == 0)
+        {
+            // Save a replay file from the game history.
+        }
+        exitToMenu();
     }
     
     public Move notify(int location, List<Move> validMoves)
@@ -99,7 +116,7 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         for (Ticket t : Ticket.values()) cT[t2i(t)] = model.getPlayerTickets(cP, t);
         if (cP == black)
         {
-            JOptionPane.showMessageDialog(display, new JLabel("Mr. X's turn is about to start. Other players, look away now!"), "WARNING", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(display, new JLabel("Mr. X's turn is about to start. Other players, look away now!"), "Warning! Mr. X's turn.", JOptionPane.WARNING_MESSAGE);
             display.setxTurn(true);
         }
         processMoves(true);
@@ -138,12 +155,19 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         display.updateTargets(ts);
     }
     
+    public void exitToMenu()
+    {
+        ConsoleGame newGame = new ConsoleGame();
+        SwingUtilities.invokeLater(newGame::run);
+        SwingUtilities.getWindowAncestor(display).dispose();
+    }
+    
     public void actionPerformed(ActionEvent e)
     {
         String cmd = e.getActionCommand();
-        if (cmd.equals("save")) { }
-        if (cmd.equals("load")) { }
-        if (cmd.equals("quit")) { }
+        if (cmd.equals("save")) { /* Save game from history. */ }
+        if (cmd.equals("load")) { /* Load new game from file. */ }
+        if (cmd.equals("quit")) exitToMenu();
         else
         {
             MoveTicket m;
@@ -158,7 +182,7 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
             int l = Integer.parseInt(terms[0]);
             Ticket t = s2t(terms[1]);
             m = new MoveTicket(cP, l, t);
-            display.play(cP, l, model.getRounds().get(model.getRound()));
+            display.play(cP, l, t2i(t), model.getRounds().get(model.getRound() + 1));
             if (chosenMove != null) chosenMove = new MoveDouble(cP, chosenMove, m);
             else chosenMove = m;
             if (dbl)
@@ -188,7 +212,7 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     public void mouseClicked(MouseEvent e)
     {
         display.updateMouse(e);
-        for (int i=0; i<199; i++) if (display.mouseOver(i))
+        for (int i=0; i<199; i++) if (display.mouseOver(i) && ts[i])
         {
             display.makeTicketMenu(i+1, cP == black, cT, usable[i], this);
             display.showTicketMenu();
