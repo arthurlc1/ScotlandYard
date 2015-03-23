@@ -14,17 +14,19 @@ public class GameHistory implements Spectator
     
     private final List<Piece> pieces;
     private final List<Move> moves;
+    private final List<Ticket> xTickets;
     
     public GameHistory(ScotlandYardModel model)
     {
         this();
-        model.spectate(this);
+        model.addHistory(this);
     }
     
     private GameHistory()
     {
     	pieces = new ArrayList<Piece>();
         moves = new ArrayList<Move>();
+        xTickets = new ArrayList<Ticket>();
     }
     
     public void join(Colour c, int l, Map<Ticket, Integer> t)
@@ -48,6 +50,21 @@ public class GameHistory implements Spectator
         moves.add(m);
     }
     
+    public void addxTicket(Move m)
+    {
+        if (m instanceof MoveTicket && m.colour == Colour.Black)
+        {
+            xTickets.add(((MoveTicket)m).ticket);
+        }
+        if (m instanceof MoveDouble)
+        {
+            for (Move mt : ((MoveDouble)m).moves)
+            {
+                xTickets.add(((MoveTicket)mt).ticket);
+            }
+        }
+    }
+    
     public ScotlandYardModel toGame(Player player) throws IOException
     {
         ScotlandYardModel model = ScotlandYardModel.defaultGame(pieces.size());
@@ -55,12 +72,19 @@ public class GameHistory implements Spectator
         for (Piece p : pieces) model.join(player, p.colour, p.find(), p.tickets);
         for (Move m : moves)
         {
+            addxTicket(m);
             if (m instanceof MoveTicket) model.play((MoveTicket) m);
             if (m instanceof MoveDouble) model.play((MoveDouble) m);
             if (m instanceof MovePass) model.play((MovePass) m);
             model.nextPlayer();
         }
+        model.addHistory(this);
         return model;
+    }
+    
+    public List<Ticket> xTickets()
+    {
+        return xTickets;
     }
     
     public void toFile(File f) throws FileNotFoundException

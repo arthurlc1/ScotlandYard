@@ -3,7 +3,11 @@ package solution;
 import scotlandyard.*;
 
 import java.io.*;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Scanner;
 import java.util.concurrent.*;
 
 import javax.swing.*;
@@ -22,6 +26,8 @@ import java.awt.image.*;
 
 public class ScotlandYardDisplay extends JPanel implements ActionListener
 {
+    private GameHistory history;
+    
     private final static Colour black = Colour.Black;
     private final static RenderingHints textRenderHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
     private final static RenderingHints imageRenderHints = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -47,10 +53,9 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
     private int MIN_X, MAX_X, MIN_Y, MAX_Y;
     private double z;
     private Point s, w, o0, o, v0, v, m;
+    
     private boolean dragging = false;
     private boolean zooming = false;
-    //private double moveV;
-    //private double panV;
     
     private GridBagConstraints gbc;
     private JButton menuB;
@@ -58,7 +63,7 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
     private JMenuItem save, quit;
     private TicketPanel ticketP;
     private JPopupMenu ticketM;
-    private TimelinePanel timeline;
+    protected TimelinePanel timeline;
     
     private boolean ready;
     private CountDownLatch guiReady;
@@ -72,6 +77,7 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
     // Initialise SYC from save file.
     protected ScotlandYardDisplay(GameHistory history)
     {
+        this.history = history;
         new ScotlandYardControl(history).addDisplay(this);
     }
     
@@ -108,7 +114,7 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
         bg = Resources.get("background");
         s = new Point(bg.getWidth(), bg.getHeight());
         String[] imgS = {"s-taxi","s-bus","s-tube"};
-        Scanner nodeScanner = new Scanner(new File("resources/dist/nodes.txt"));
+        Scanner nodeScanner = new Scanner(new File("src/solution/nodes.txt"));
         while (nodeScanner.hasNextLine())
         {
             String[] args = nodeScanner.nextLine().split(" ");
@@ -151,6 +157,11 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
         gbc.anchor = GridBagConstraints.PAGE_END;
         gbc.insets = new Insets(0, 0, 0, 0);
         this.add(timeline, gbc);
+        if (history != null)
+        {
+            List<Ticket> xT = history.xTickets();
+            for (int i=0; i<xT.size(); i++) timeline.add(xT.get(i));
+        }
     }
     
     protected void makeReady(MouseAdapter a)
@@ -204,7 +215,10 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
             locX = target;
             timeline.add(ticket);
         }
-        if (c != black || xReveal) locMap.put(c,target);
+        if (c != black || xReveal)
+        {
+            locMap.put(c,target);
+        }
         repaint();
     }
     
@@ -239,6 +253,14 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
         return out;
     }
     
+    protected AffineTransform sc_mv_o(int oX, int oY)
+    {
+        AffineTransform out = new AffineTransform();
+        out.concatenate(sc_mv);
+        out.translate(oX, oY);
+        return out;
+    }
+    
     protected void updateLimits()
     {
         w = new Point(getWidth(), getHeight());
@@ -268,8 +290,6 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
         g2d.setRenderingHints(textRenderHints);
         g2d.setRenderingHints(imageRenderHints);
         g2d.setRenderingHints(renderHints);
-        
-        if (!ready) super.paintComponent(g);
         
         this.updateLimits();
         this.enforceLimits();

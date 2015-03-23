@@ -16,6 +16,7 @@ public class ScotlandYardModel extends ScotlandYard
     private MrX mrX;
     
     private final List<Spectator> spectators;
+    private GameHistory history;
     
     private final List<Boolean> rounds;
     private int round;
@@ -71,6 +72,11 @@ public class ScotlandYardModel extends ScotlandYard
     public void spectate(Spectator spectator)
     {
         spectators.add(spectator);
+    }
+    
+    public void addHistory(GameHistory history)
+    {
+        this.history = history;
     }
     
     // Return true iff the expected number of players have joined the game.
@@ -163,6 +169,7 @@ public class ScotlandYardModel extends ScotlandYard
         {
             boolean reveal = rounds.get(++round);
             mrX.play(move, reveal);
+            if (history != null) history.notify(move);
             move = new MoveTicket(black, mrX.lastSeen(), move.ticket);
         }
         else ((Detective) toMove).play(move, mrX);
@@ -307,7 +314,7 @@ public class ScotlandYardModel extends ScotlandYard
     {
         List<Boolean> r = str2bools("0001000010000100001000001");
         int numD = n - 1;
-        return new ScotlandYardModel(numD, r, "resources/dist/graph.txt");
+        return new ScotlandYardModel(numD, r, "src/solution/graph.txt");
     }
     
     private static List<Boolean> str2bools(String str)

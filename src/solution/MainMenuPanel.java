@@ -52,7 +52,7 @@ public class MainMenuPanel extends JPanel implements ActionListener
     public void loadGame()
     {
         JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter(new FileNameExtensionFilter("Scotland Yard save file.", "syg"));
+        chooser.setFileFilter(new FileNameExtensionFilter("Scotland Yard Savefile (*.syg)", "syg"));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
             GameHistory history = null;

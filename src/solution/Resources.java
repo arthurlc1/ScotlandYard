@@ -78,7 +78,7 @@ public class Resources
     
     private BufferedImage getIMG(String s)
     {
-        try { return ImageIO.read(new File("resources/dist/" + s + ".png")); }
+        try { return ImageIO.read(new File("src/solution/" + s + ".png")); }
         catch (IOException e) { System.err.println(s + ".png not found."); }
         return null;
     }

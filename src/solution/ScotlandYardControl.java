@@ -41,7 +41,7 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     
     public ScotlandYardControl(List<Colour> colours)
     {
-        try { model = ScotlandYardModel.defaultGame(colours.size() - 1); }
+        try { model = ScotlandYardModel.defaultGame(colours.size()); }
         catch (IOException e) { }
         history = new GameHistory(model);
         init(colours);
@@ -112,7 +112,16 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         String[] options = {"Save Replay","Main Menu"};
         if (JOptionPane.showOptionDialog(display,message,title,JOptionPane.YES_NO_OPTION,JOptionPane.PLAIN_MESSAGE,null,options,1) == 0)
         {
-            // Save a replay file from the game history.
+            JFileChooser chooser = new JFileChooser();
+            chooser.setFileFilter(new FileNameExtensionFilter("Scotland Yard Replay (*.syr)", "syr"));
+            if (chooser.showSaveDialog(display) == JFileChooser.APPROVE_OPTION)
+            {
+                File chosen = chooser.getSelectedFile();
+                String path = chosen.getPath();
+                if (!path.endsWith(".syr")) chosen = new File(path + ".syr");
+                try { history.toFile(chosen); }
+                catch (FileNotFoundException e) { }
+            }
         }
         exitToMenu();
     }
@@ -141,7 +150,6 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         moveChosen = new CountDownLatch(1);
         try { moveChosen.await(); }
         catch (Exception e) { throw new Error("Interrupted while waiting for move!"); }
-        System.err.println(chosenMove.toString());
         return chosenMove;
     }
     
@@ -223,10 +231,15 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     public void saveGame()
     {
         JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter(new FileNameExtensionFilter("Scotland Yard save file.", "syg"));
-        chooser.showOpenDialog(display);
-        try { history.toFile(chooser.getSelectedFile()); }
-        catch (FileNotFoundException e) { }
+        chooser.setFileFilter(new FileNameExtensionFilter("Scotland Yard Savefile (*.syg)", "syg"));
+        if (chooser.showSaveDialog(display) == JFileChooser.APPROVE_OPTION)
+        {
+            File chosen = chooser.getSelectedFile();
+            String path = chosen.getPath();
+            if (!path.endsWith(".syg")) chosen = new File(path + ".syg");
+            try { history.toFile(chosen); }
+            catch (FileNotFoundException e) { }
+        }
     }
     
     public void loadGame()
