@@ -13,9 +13,6 @@ public class ConsoleGame
         
         ConsoleGame game = new ConsoleGame();
         SwingUtilities.invokeLater(game::run);
-   
-        
-    
     }
     
     public void run()

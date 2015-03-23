@@ -22,5 +22,3 @@ public class Detective extends Piece
         return Piece.getMap(11, 8, 4, 0, 0);
     }
 }
-
-
