@@ -72,6 +72,23 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         display.addMouseListener(this);
     }
     
+    public void startGame()
+    {
+        model.start();
+        String title;
+        JLabel message;
+        if (model.getWinningPlayers().contains(black))
+        {
+            title = "Mr. X wins!";
+            message = new JLabel("Mr. X has evaded capture for long enough to escape. Game over.");
+        }
+        else
+        {
+            title = "Detectives win!";
+            message = new JLabel("The detective have successfully captured Mr. X. Game over.");
+        }
+    }
+    
     public Move notify(int location, List<Move> validMoves)
     {
         this.validMoves = validMoves;
