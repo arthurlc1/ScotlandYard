@@ -11,11 +11,24 @@ public class SaveFileWriter {
 	public static void write(String fileName, GameHistory history) throws IOException
 	{
 		File file = new File(fileName);
-		PrintWriter writer = new PrintWriter(file, "UTF-8");
 		List<Piece> pieces = history.pieces;	
 		List<Move> moves = history.moves;
+		ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file));
+		for (Piece piece : pieces) 
+		{
+			objectOutputStream.writeObject(piece);
+		}
+		for (Move move : moves)
+		{
+		objectOutputStream.writeObject(move);
+		}
 		
-		for (Move move : moves) 
+		objectOutputStream.flush();
+		objectOutputStream.close();
+		
+	}
+}
+/*		for (Move move : moves) 
 		{
 			writer.print(move.toString() + " ");
 		}
