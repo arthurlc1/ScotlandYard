@@ -1,6 +1,10 @@
 package solution;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import scotlandyard.*;
 
@@ -12,7 +16,8 @@ public class SaveFileReader
 		GameHistory history = new GameHistory();
 		Piece piece;
 		Move move;
-		for (int i = 0; i<=5; i++)
+		int j = objectInputStream.readInt();
+		for (int i = 0; i<j; i++)
 		{
 			piece = (Piece)objectInputStream.readObject();
 			history.join(piece.colour, piece.find(), piece.tickets); 
@@ -25,6 +30,22 @@ public class SaveFileReader
 		objectInputStream.close();
         return history;
 	}
+
+	public static void main(String[] args) throws IOException
+	{
+		List<Boolean> ting = new ArrayList<Boolean>();
+		Player player1;
+		for(int i = 0 ; i<20; i++)
+		{
+			ting.add(true);
+		}
+		ScotlandYardModel sym = new ScotlandYardModel(1,ting, "graph.txt");
+		Map<Ticket, Integer> map = new HashMap<Ticket, Integer>();
+		map.add
+		sym.join(player1, "BLUE", 143, )
+	}
+
+
 }
 /*		File file = new File(fileName);
 		Scanner scanner = new Scanner(file);
@@ -56,3 +77,6 @@ public class SaveFileReader
 	}
 }
 */
+
+
+
