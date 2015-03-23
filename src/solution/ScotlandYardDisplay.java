@@ -55,7 +55,7 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
     private GridBagConstraints gbc;
     private JButton menuB;
     private JPopupMenu menu;
-    private JMenuItem save, load, quit;
+    private JMenuItem save, quit;
     private TicketPanel ticketP;
     private JPopupMenu ticketM;
     private TimelinePanel timeline;
@@ -129,10 +129,8 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
         menuB = new JButton(new ImageIcon(Resources.get("menu")));
         menu = new JPopupMenu();
         save = new JMenuItem("Save");
-        load = new JMenuItem("Load");
         quit = new JMenuItem("Quit");
         menu.add(save);
-        menu.add(load);
         menu.add(quit);
         gbc.anchor = GridBagConstraints.FIRST_LINE_START;
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -143,8 +141,6 @@ public class ScotlandYardDisplay extends JPanel implements ActionListener
         menuB.addActionListener(this);
         save.setActionCommand("save");
         save.addActionListener(control);
-        load.setActionCommand("load");
-        load.addActionListener(control);
         quit.setActionCommand("quit");
         quit.addActionListener(control);
     }

@@ -35,6 +35,13 @@ public abstract class Piece
         tickets.replace(move.ticket, tickets.get(move.ticket) - 1);
     }
     
+    public String toString()
+    {
+        String str = "Piece " + colour.name() + " " + location;
+        for (int i=0; i<ticket.length; i++) str = str + " " + tickets.get(ticket[i]);
+        return str;
+    }
+    
     public static Map<Ticket,Integer> getMap(int t, int b, int u, int d, int s)
     {
         Map<Ticket,Integer> tickets = new HashMap<Ticket,Integer>();
@@ -45,4 +52,6 @@ public abstract class Piece
         tickets.put(Ticket.SecretMove,  s);
         return tickets;
     }
+    
+    private final static Ticket[] ticket = {Ticket.Taxi, Ticket.Bus, Ticket.Underground, Ticket.SecretMove, Ticket.DoubleMove};
 }

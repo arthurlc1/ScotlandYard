@@ -7,6 +7,7 @@ import java.util.concurrent.*;
 import java.io.*;
 
 import javax.swing.*;
+import javax.swing.filechooser.*;
 import java.awt.event.*;
 
 public class ScotlandYardControl extends MouseAdapter implements Player, ActionListener
@@ -219,6 +220,20 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
         }
     }
     
+    public void saveGame()
+    {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter("Scotland Yard save file.", "syg"));
+        chooser.showOpenDialog(display);
+        try { history.toFile(chooser.getSelectedFile()); }
+        catch (FileNotFoundException e) { }
+    }
+    
+    public void loadGame()
+    {
+        
+    }
+    
     public void exitToMenu()
     {
         ConsoleGame newGame = new ConsoleGame();
@@ -229,8 +244,8 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     public void actionPerformed(ActionEvent e)
     {
         String cmd = e.getActionCommand();
-        if      (cmd.equals("save")) { /* Save game from history. */ }
-        else if (cmd.equals("load")) { /* Load new game from file. */ }
+        if      (cmd.equals("save")) saveGame();
+        else if (cmd.equals("load")) loadGame();
         else                         exitToMenu();
     }
     

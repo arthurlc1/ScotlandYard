@@ -50,11 +50,11 @@ public class ScotlandYardModel extends ScotlandYard
     {
         for (Piece p : pieces) if (p.colour == colour) return false;
         Piece newPiece;
+        tickets = new HashMap<Ticket, Integer>(tickets);
         if (colour == black)
         {
             newPiece = new MrX(player, colour, location, rounds.get(0), tickets);
             pieces.add(0, newPiece);
-            if (history != null) history.pieces.add(0, newPiece);
             mrX = (MrX) pieces.get(0);
         }
         else
@@ -62,7 +62,6 @@ public class ScotlandYardModel extends ScotlandYard
             if (pieces.size() == numPlayers - (mrX == null ? 1 : 0)) return false;
             newPiece = new Detective(player, colour, location, tickets);
             pieces.add(newPiece);
-            if (history != null) history.pieces.add(newPiece);
         }
         return true;
     }
@@ -178,7 +177,6 @@ public class ScotlandYardModel extends ScotlandYard
         getPiece(move.colour).play(move);
         play((MoveTicket) move.moves.get(0));
         play((MoveTicket) move.moves.get(1));
-        System.err.println("Double move!");
     }
     
     // No change to locations, but notify spectators that a pass has been played.

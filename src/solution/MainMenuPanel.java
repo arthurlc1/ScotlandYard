@@ -2,8 +2,11 @@ package solution;
 
 import scotlandyard.*;
 
+import java.io.*;
+
 import javax.swing.*;
 import javax.swing.border.*;
+import javax.swing.filechooser.*;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -48,7 +51,20 @@ public class MainMenuPanel extends JPanel implements ActionListener
     
     public void loadGame()
     {
-        
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter("Scotland Yard save file.", "syg"));
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
+            GameHistory history = null;
+            try { history = GameHistory.fromFile(chooser.getSelectedFile()); }
+            catch(Exception e)
+            {
+                System.err.println("Could not load save file.");
+                return;
+            }
+            GameFrame w = (GameFrame) SwingUtilities.getWindowAncestor(this);
+            w.setScreen(new ScotlandYardDisplay(history));
+        }
     }
     
     public void quit()
