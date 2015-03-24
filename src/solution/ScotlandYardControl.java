@@ -249,7 +249,7 @@ public class ScotlandYardControl extends MouseAdapter implements Player, ActionL
     
     public void exitToMenu()
     {
-        ConsoleGame newGame = new ConsoleGame();
+        ScotlandYardApplication newGame = new ScotlandYardApplication();
         SwingUtilities.invokeLater(newGame::run);
         SwingUtilities.getWindowAncestor(display).dispose();
     }
